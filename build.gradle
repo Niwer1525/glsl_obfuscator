@@ -1,0 +1,23 @@
+plugins {
+    id 'groovy'
+}
+
+group = 'com.niwer'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+}
+
+task buildJar(type: Jar) {
+    archiveBaseName.set("glsl-obfuscator-plugin")
+    from sourceSets.main.output
+    manifest {
+        attributes 'Implementation-Title': 'GLSL Obfuscator Plugin', 'Implementation-Version': version
+    }
+}
