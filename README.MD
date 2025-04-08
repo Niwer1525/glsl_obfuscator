@@ -146,6 +146,13 @@ Of course it will keep pre-processors lines (#version, #extension, #define, #inc
 ## Gradle
 This is the most recommended way to use the shader minifier. You can add the following code to your build.gradle file:
 ```groovy
+buildscript {
+	repositories { mavenCentral() }
+	dependencies {
+		classpath fileTree(dir: 'libs', include: ['*.jar'])
+	}
+}
+
 apply plugin: 'com.niwer.glsl_obfuscator'
 ```
 You also need to put the JAR file into your project's "libs/" folder.
