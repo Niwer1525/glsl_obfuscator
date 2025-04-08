@@ -147,7 +147,6 @@ Of course it will keep pre-processors lines (#version, #extension, #define, #inc
 This is the most recommended way to use the shader minifier. You can add the following code to your build.gradle file:
 ```groovy
 buildscript {
-	repositories { mavenCentral() }
 	dependencies {
 		classpath fileTree(dir: 'libs', include: ['*.jar'])
 	}
