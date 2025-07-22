@@ -14,6 +14,12 @@ GLSL_KEYWORDS = {
 
 GLSL_SWIZZLES = {"x", "y", "z", "w", "r", "g", "b", "a", "xy", "xz", "yz", "rgb", "rgba", "st", "stp"}
 
+# GLSL built-in properties that should not be minified
+GLSL_BUILTIN_PROPERTIES = {
+    "diffuse", "ambient", "specular", "position", "spotDirection", "spotExponent",
+    "spotCutoff", "constantAttenuation", "linearAttenuation", "quadraticAttenuation"
+}
+
 def minify_shader_code(code):
     # Minify the shader code by removing comments and extra spaces
     minified_code = minify_glsl(code)
@@ -72,6 +78,14 @@ def minify_variable_names(code):
     for match in re.finditer(r'uniform\s+\w+\s+(\w+);', shader_code):
         uniforms.add(match.group(1))
 
+    # Find attributes (e.g: attribute vec3 position;)
+    for match in re.finditer(r'attribute\s+\w+\s+(\w+);', shader_code):
+        uniforms.add(match.group(1))  # Treat attributes as uniforms for minification
+
+    # Find varying variables (e.g: varying vec3 normal;)
+    for match in re.finditer(r'varying\s+\w+\s+(\w+);', shader_code):
+        uniforms.add(match.group(1))  # Treat varying variables as uniforms for minification
+
     # Find declared variables (e.g: float a; vec3 b; mat4 c;)
     for match in re.finditer(r'\b(?:float|vec[234]|mat[234])\s+(\w+)', shader_code):
         var_name = match.group(1)
@@ -86,13 +100,17 @@ def minify_variable_names(code):
 
     def replace_name(match):
         original_name = match.group(0)
-        # Check if the name is a keyword or a uniform
-        if original_name in GLSL_KEYWORDS or original_name in uniforms or original_name in GLSL_SWIZZLES:
+        # Check if the name is a keyword, uniform, swizzle, or built-in property
+        if (original_name in GLSL_KEYWORDS or 
+            original_name in uniforms or 
+            original_name in GLSL_SWIZZLES or 
+            original_name in GLSL_BUILTIN_PROPERTIES):
             return original_name
         return name_map.get(original_name, original_name)
 
     # We use a regex to replace variable names in the shader code
-    pattern = r'(?<!\.)\b[a-zA-Z_][a-zA-Z0-9_]*\b'
+    # Negative lookbehind to avoid matching properties after . or ].
+    pattern = r'(?<!\.)(?<!\]\.)\b[a-zA-Z_][a-zA-Z0-9_]*\b'
     minified_shader_code = re.sub(pattern, replace_name, shader_code)
 
     # Rebuild the preprocessor lines with the minified shader code

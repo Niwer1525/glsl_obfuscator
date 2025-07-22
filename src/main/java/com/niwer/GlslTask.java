@@ -24,6 +24,11 @@ public class GlslTask {
         "texture2D", "textureCube", "dot", "mix", "clamp", "fract", "sin", "cos"
     );
     private static final Set<String> GLSL_SWIZZLES = Set.of("x", "y", "z", "w", "r", "g", "b", "a", "xy", "xz", "yz", "rgb", "rgba", "st", "stp");
+    private static final Set<String> GLSL_BUILTIN_PROPERTIES = Set.of(
+        "diffuse", "ambient", "specular", "position", "spotDirection", "spotExponent",
+        "spotCutoff", "constantAttenuation", "linearAttenuation", "quadraticAttenuation"
+    );
+
 
     public static String obfuscate(File file) {
         if (file == null) throw new RuntimeException("File is null");
@@ -106,12 +111,23 @@ public class GlslTask {
                 continue; // Skip uniforms
             }
 
+            if(line.startsWith("attribute") || line.startsWith("varying")) {
+                // Treat attributes and varyings as uniforms for minification
+                Pattern uniformPattern = Pattern.compile("(?:attribute|varying)\\s+\\w+\\s+(\\w+);");
+                Matcher uniformMatcher = uniformPattern.matcher(line);
+                while (uniformMatcher.find()) {
+                    uniformsNames.add(uniformMatcher.group(1)); // Add the attribute/varying variable name to the set
+                }
+                minifiedCode.append(line).append("\n");
+                continue; // Skip attributes and varyings
+            }
+
             // Find declared variables (e.g: float a; vec3 b; mat4 c;)
             Pattern pattern = Pattern.compile("\\b(?:float|vec[234]|mat[234])\\s+(\\w+)");
             Matcher matcher = pattern.matcher(line);
             while (matcher.find()) {
                 String varName = matcher.group(1);
-                if(!GLSL_KEYWORDS.contains(varName) && !GLSL_SWIZZLES.contains(varName)) 
+                if(!GLSL_KEYWORDS.contains(varName) && !GLSL_SWIZZLES.contains(varName) && !GLSL_BUILTIN_PROPERTIES.contains(varName)) 
                     variables.put(varName, "v" + variableCount++); // Assign a minified name (e.g: v0, v1, ...)
             }
 
@@ -120,7 +136,11 @@ public class GlslTask {
                 String originalName = entry.getKey();
                 String minifiedName = entry.getValue();
                 if(uniformsNames.contains(originalName)) continue; // Skip uniforms
-                line = line.replaceAll("\\b" + originalName + "\\b", minifiedName); // Replace all occurrences of the variable name
+                
+                // Use negative lookbehind to avoid replacing properties after . or ].
+                // This prevents replacing built-in properties like diffuse in gl_FrontLightProduct[i].diffuse
+                String replacementPattern = "(?<!\\.)(?<!\\]\\.)" + "\\b" + Pattern.quote(originalName) + "\\b";
+                line = line.replaceAll(replacementPattern, minifiedName);
             }
             minifiedCode.append(line).append("\n"); // Append the modified line to the result
         }
