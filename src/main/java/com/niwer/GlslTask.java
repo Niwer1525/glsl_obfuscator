@@ -79,10 +79,16 @@ public class GlslTask {
         for (String line : lines) {
             line = line.trim(); // Remove leading and trailing whitespace
             if(line.startsWith("#")) {
+                // Ensure preprocessor directives are always on their own line.
+                // If previous content doesn't end with a newline, add one first.
+                if (minifiedCode.length() > 0 && minifiedCode.charAt(minifiedCode.length() - 1) != '\n')
+                    minifiedCode.append('\n');
+                
                 minifiedCode.append(line).append("\n");
                 continue; // Skip preprocessor directives
             }
-            minifiedCode.append(line).append(" "); // Append the modified line to the result
+            // Only append non-empty code lines and keep a single space between them
+            if (!line.isEmpty()) minifiedCode.append(line).append(" "); // Append the modified line to the result
         }
         return minifiedCode.toString().trim(); // Remove trailing whitespace
     }

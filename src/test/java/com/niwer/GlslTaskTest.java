@@ -5,6 +5,10 @@ public class GlslTaskTest {
     private static final String shaderCode = """
         #version 120
 
+        #ifdef GL_ES
+        precision mediump float;
+        #endif
+
         uniform sampler2D uScene;
         uniform vec2 uResolution;
         uniform float uTime;
