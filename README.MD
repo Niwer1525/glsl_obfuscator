@@ -161,6 +161,12 @@ buildscript {
 }
 apply plugin: 'com.niwer.glsl_obfuscator'
 ```
+By default, the plugin will minify all files in the "src/main/resources/" folder and subfolders. You can change this by adding the following code to your build.gradle file:
+```groovy
+glslObfuscator {
+	sourceDir = 'src/main/resources/shaders' // Change this to your shaders folder
+}
+```
 
 ## Maven
 Not implemented yet.

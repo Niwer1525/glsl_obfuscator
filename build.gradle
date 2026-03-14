@@ -49,14 +49,6 @@ task buildJar(type: Jar) {
 }
 
 publishing {
-    publications {
-        gpr(MavenPublication) {
-            groupId = 'com.niwer'
-            artifactId = publishedArtifactId
-            version = project.version
-            from components.java
-        }
-    }
     repositories {
         maven {
             name = "GitHubPackages"
