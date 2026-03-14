@@ -56,8 +56,8 @@ public class GlslTaskTest {
     private static void print(Object o) { System.out.println(o); }
 
     public static void main(String[] args) {
-        String optimizedCode = GlslTask.obfuscate(GlslTask.getLines(shaderCode));
-        print(optimizedCode);
+        final String OBFUSCATED_CODE = GlslTask.obfuscate(GlslTask.getLines(shaderCode));
+        print(OBFUSCATED_CODE);
     }
 
     // Yeah we should also make JUnit tests for this class, but we don't have time for that right now.

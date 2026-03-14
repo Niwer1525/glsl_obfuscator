@@ -143,7 +143,25 @@ uniform sampler2D uScene; uniform vec2 uResolution; uniform float uTime; uniform
 Of course it will keep pre-processors lines (#version, #extension, #define, #include, etc.) and it will keep the main function name (main) and the gl_FragColor variable name (gl_FragColor).
 
 # Usage
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/Niwer1525/glsl_obfuscator?label=latest%20version&color=blue)
+Or [📥Download the jar](https://github.com/Niwer1525/glsl_obfuscator/releases/latest/download/glsl-obfuscator-plugin.jar)
+
 ## Gradle
+```groovy
+repositories {
+    mavenCentral();
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'com.github.Niwer1525:glsl_obfuscator:1.0.0'
+}
+```
+
+## Maven
+Not implemented yet.
+
+## Manual Gradle use
 This is the most recommended way to use the shader minifier. You can add the following code to your build.gradle file:
 ```groovy
 buildscript {

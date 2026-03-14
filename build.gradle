@@ -1,9 +1,13 @@
 plugins {
     id 'groovy'
+    id 'java-library'
+    id 'maven-publish'
 }
 
 group = 'com.niwer'
-version = '1.0.2'
+def releaseVersion = findProperty('releaseVersion') ?: '1.0.0'
+version = releaseVersion
+def publishedArtifactId = 'glsl-obfuscator-plugin'
 
 repositories {
     mavenCentral()
@@ -12,17 +16,47 @@ repositories {
 dependencies {
     implementation gradleApi()
     implementation localGroovy()
+
+    // Use JUnit Jupiter for testing.
+    testImplementation "org.junit.jupiter:junit-jupiter:5.12.1"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 task buildJar(type: Jar) {
-    archiveBaseName.set("glsl-obfuscator-plugin")
+    archiveBaseName.set(publishedArtifactId)
     from sourceSets.main.output
     manifest {
         attributes 'Implementation-Title': 'GLSL Obfuscator Plugin', 'Implementation-Version': version
     }
+}
+
+publishing {
+    publications {
+        gpr(MavenPublication) {
+            groupId = 'com.niwer'
+            artifactId = publishedArtifactId
+            version = project.version
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = "https://maven.pkg.github.com/Niwer1525/glsl_obfuscator"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+}
+
+tasks.named('test') {
+    // Use JUnit Platform for unit tests.
+    useJUnitPlatform()
 }
