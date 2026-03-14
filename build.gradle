@@ -32,6 +32,7 @@ java {
 }
 
 gradlePlugin {
+    automatedPublishing = false // Disable automated publishing to avoid issues with GitHub Packages
     plugins {
         glslPlugin {
             id = 'com.niwer.glsl_obfuscator'
@@ -50,11 +51,11 @@ task buildJar(type: Jar) {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
-            groupId = project.group
+        gpr(MavenPublication) {
+            groupId = 'com.niwer'
             artifactId = publishedArtifactId
+            version = project.version
             from components.java
-            artifact buildJar // Include the custom JAR task in the publication
         }
     }
     repositories {
