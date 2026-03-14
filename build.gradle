@@ -49,6 +49,14 @@ task buildJar(type: Jar) {
 }
 
 publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = project.group
+            artifactId = publishedArtifactId
+            from components.java
+            artifact buildJar // Include the custom JAR task in the publication
+        }
+    }
     repositories {
         maven {
             name = "GitHubPackages"
