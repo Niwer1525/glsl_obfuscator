@@ -146,6 +146,8 @@ Of course it will keep pre-processors lines (#version, #extension, #define, #inc
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/Niwer1525/glsl_obfuscator?label=latest%20version&color=blue)
 Or [📥Download the jar](https://github.com/Niwer1525/glsl_obfuscator/releases/latest/download/glsl-obfuscator-plugin.jar)
 
+See on [JitPack](https://jitpack.io/#Niwer1525/glsl_obfuscator) for more versions
+
 ## Gradle
 ```groovy
 repositories {
