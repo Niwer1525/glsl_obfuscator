@@ -2,6 +2,7 @@ plugins {
     id 'groovy'
     id 'java-library'
     id 'maven-publish'
+    id 'java-gradle-plugin' // Required for Gradle plugin development
 }
 
 group = 'com.niwer'
@@ -17,6 +18,9 @@ dependencies {
     implementation gradleApi()
     implementation localGroovy()
 
+    // Add Gradle TestKit for testing Gradle plugin
+    testImplementation gradleTestKit()
+
     // Use JUnit Jupiter for testing.
     testImplementation "org.junit.jupiter:junit-jupiter:5.12.1"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -25,6 +29,15 @@ dependencies {
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
+}
+
+gradlePlugin {
+    plugins {
+        glslPlugin {
+            id = 'com.niwer.glsl_obfuscator'
+            implementationClass = 'com.niwer.GlslObfuscatorPlugin' // Main plugin class that implements Plugin<Project>
+        }
+    }
 }
 
 task buildJar(type: Jar) {
