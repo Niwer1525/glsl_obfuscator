@@ -150,14 +150,16 @@ See on [JitPack](https://jitpack.io/#Niwer1525/glsl_obfuscator) for more version
 
 ## Gradle
 ```groovy
-repositories {
-    mavenCentral();
-    maven { url 'https://jitpack.io' }
+buildscript {
+    repositories {
+		mavenCentral()
+		maven { url 'https://jitpack.io' }
+	}
+	dependencies {
+		classpath 'com.github.Niwer1525:glsl_obfuscator:v1.0.3'
+	}
 }
-
-dependencies {
-    implementation 'com.github.Niwer1525:glsl_obfuscator:1.0.0'
-}
+apply plugin: 'com.niwer.glsl_obfuscator'
 ```
 
 ## Maven
@@ -186,11 +188,3 @@ Then all files ending with :
     - .fsh
     - .vsh
 Will be minified and obfuscated automatically when you build your project. (This happens in the "processResources" task.)
-
-## Python (Manually convert one file)
-You only need to execute the "shader_minifier.py" script. The script will prompt you for the input file. The script will read the input file, minify/obfsucate it, and print the output into the console.
-
-Make sure you have Python installed on your system. You can download it from [python.org](https://www.python.org/downloads/).
-```bash
-python shader_minifier.py
-```
