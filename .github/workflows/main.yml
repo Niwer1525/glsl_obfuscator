@@ -29,19 +29,20 @@ jobs:
         run: ./gradlew test
 
       - name: Build JAR
-        run: ./gradlew assemble
+        run: ./gradlew assemble -PreleaseVersion=${GITHUB_REF_NAME#v}
 
-      - name: Prepare Fixed Name JAR
-        run: cp build/libs/glsl-obfuscator-plugin-*.jar build/libs/glsl-obfuscator-plugin.jar
+      - name: Prepare Fixed Name JARs
+        run: |
+          # Main JAR (explicitly exclude sources JAR)
+          cp $(ls build/libs/glsl-obfuscator-plugin-*.jar | grep -v -- '-sources\.jar$') build/libs/glsl-obfuscator-plugin.jar
+          # Sources JAR
+          cp build/libs/glsl-obfuscator-plugin-*-sources.jar build/libs/glsl-obfuscator-plugin-sources.jar
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: build/libs/glsl-obfuscator-plugin.jar
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to GitHub Packages
-        run: ./gradlew publish -PreleaseVersion=${GITHUB_REF_NAME#v}
+          files: |
+            build/libs/glsl-obfuscator-plugin.jar
+            build/libs/glsl-obfuscator-plugin-sources.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -49,9 +49,6 @@ public class ObfuscatorEngine {
         return minified.toString();
     }
 
-    /**
-     * Passe 1 : Collecter les symboles et les entrées/sorties ignorées.
-     */
     protected static void collectSymbols(List<String> lines, ObfuscationContext context) {
         for (String line : lines) {
             line = line.trim();
