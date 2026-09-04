@@ -2,6 +2,8 @@
 
 #test_import <math.glsl>
 
+flat in float u, v;
+
 void main() {
     int model = 0;
 

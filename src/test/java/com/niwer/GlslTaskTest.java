@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,6 +35,17 @@ class GlslTaskTest {
 
     @Test void testObfuscateFromFile() {
         final String OBFUSCATED_CODE = GlslTask.obfuscate(new File("src/test/resources/example_shader.frag"));
+        assertNotNull(OBFUSCATED_CODE);
+    }
+
+    @Test void testObfuscateFromFiles() {
+        final List<File> COLLECTION = new ArrayList<File>();
+        Collections.addAll(COLLECTION,
+            new File("src/test/resources/import_example/shader_with_import.glsl"),
+            new File("src/test/resources/import_example/model_calculator.glsl"),
+            new File("src/test/resources/import_example/math.glsl")
+        );
+        final var OBFUSCATED_CODE = GlslTask.obfuscateProject(COLLECTION);
         assertNotNull(OBFUSCATED_CODE);
     }
 

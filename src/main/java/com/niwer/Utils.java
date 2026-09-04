@@ -4,6 +4,8 @@ import java.util.List;
 
 public class Utils {
 
+    private Utils() {}
+
     /**
      * This will split a shader code into lines.
      * 

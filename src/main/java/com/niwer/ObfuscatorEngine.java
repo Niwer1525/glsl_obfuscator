@@ -1,7 +1,5 @@
 package com.niwer;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,105 +8,147 @@ import java.util.regex.Pattern;
 
 public class ObfuscatorEngine {
 
-    public static String minify(List<String> lines) {
-        final StringBuilder MINIFED_CODE = new StringBuilder();
-        for (String line : lines) {
-            line = line.trim(); // Remove leading and trailing whitespace
-            
-            // Remove comments
-            line = line.replaceAll("//.*", "").replaceAll("/\\*.*?\\*/", "").trim();
+    private ObfuscatorEngine() {}
 
-            // Remove extra spaces
+    /**
+     * Obfuscate a single GLSL shader code by minifying its content and variable names.
+     * 
+     * @param lines The GLSL shader code to obfuscate as a list of lines.
+     * @return The obfuscated GLSL shader code as a string.
+     */
+    public static String obfuscateSingle(List<String> lines) {
+        ObfuscationContext context = new ObfuscationContext();
+        List<String> minified = Utils.getLines(minify(lines));
+        
+        collectSymbols(minified, context);
+        String obfuscated = applyObfuscation(minified, context);
+        return removeNewLines(Utils.getLines(obfuscated));
+    }
+
+    protected static String minify(List<String> lines) {
+        // Join lines into a single string to handle multi-line comments and then process line by line
+        String rawCode = String.join("\n", lines);
+
+        // Delete multi-line comments /* ... */
+        rawCode = rawCode.replaceAll("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", " ");
+
+        // Delete single-line comments // ... & trim each line
+        StringBuilder minified = new StringBuilder();
+        for (String line : rawCode.split("\n")) {
+            line = line.trim();
+
+            /* Delete single-line comments */
+            int lineCommentIdx = line.indexOf("//");
+            if (lineCommentIdx != -1) line = line.substring(0, lineCommentIdx).trim();
+
+            /* Remove extra whitespace and normalize spaces */
             line = line.replaceAll("\\s+", " ");
 
-            // Add the minified line to the result
-            if(!line.isEmpty()) MINIFED_CODE.append(line).append("\n");
+            if (!line.isEmpty()) minified.append(line).append("\n");
         }
-        return MINIFED_CODE.toString();
+        return minified.toString();
     }
 
-    /* 
-     * Should be the last called function to remove new lines and spaces
+    /**
+     * Passe 1 : Collecter les symboles et les entrées/sorties ignorées.
      */
-    public static String removeNewLines(List<String> lines) {
-        final StringBuilder MINIFED_CODE = new StringBuilder();
+    protected static void collectSymbols(List<String> lines, ObfuscationContext context) {
         for (String line : lines) {
-            line = line.trim(); // Remove leading and trailing whitespace
+            line = line.trim();
+            if (line.isEmpty()) continue;
+            if (line.startsWith("#")) continue; // Ignore preprocessor directives
 
-            if(line.startsWith("#")) {
-                // Ensure preprocessor directives are always on their own line.
-                // If previous content doesn't end with a newline, add one first.
-                if (MINIFED_CODE.length() > 0 && MINIFED_CODE.charAt(MINIFED_CODE.length() - 1) != '\n')
-                    MINIFED_CODE.append('\n');
-                
-                MINIFED_CODE.append(line).append("\n");
-                continue; // Skip preprocessor directives
+            /* Identify I/O variables (uniforms, varyings, in, out) */
+            Matcher ioMatcher = GlslVariables.IO_PATTERN.matcher(line);
+            while (ioMatcher.find()) {
+                String varList = ioMatcher.group(2);
+                for (String part : varList.split(",")) {
+                    String name = cleanIdentifier(part);
+                    if (!name.isEmpty()) context.blacklist(name);
+                }
             }
 
-            // Only append non-empty code lines and keep a single space between them
-            if (!line.isEmpty()) MINIFED_CODE.append(line).append(" "); // Append the modified line to the result
+            /* Identify local, global variables, and function declarations */
+            Matcher declMatcher = GlslVariables.DECLARATION_PATTERN.matcher(line);
+            while (declMatcher.find()) {
+                String declarations = declMatcher.group(1);
+
+                /* Handle multiple declarations or assignments: e.g., "a = 5.0, b, c" */
+                for (String part : declarations.split(",")) {
+                    if (part.contains("=")) part = part.substring(0, part.indexOf('=')); // Keep only the variable name before the assignment                    
+                    if (part.contains("(")) part = part.substring(0, part.indexOf('(')); // Keep only the function name before the parenthesis
+
+                    String name = cleanIdentifier(part);
+                    if (!name.isEmpty()) context.registerSymbol(name);
+                }
+            }
         }
-        return MINIFED_CODE.toString().trim(); // Remove trailing whitespace
     }
 
-    public static String minifyVariableNames(List<String> lines) {
-        final StringBuilder MINIFIED_CODE = new StringBuilder();
-        final Set<String> UNIFORMS_NAMES = new HashSet<>(); // E.G : uScene
-        final Map<String, String> VARIABLES = new HashMap<>(); // E.G : texCoord, v0
-        int variableCount = 0;
+    protected static String applyObfuscation(List<String> lines, ObfuscationContext context) {
+        StringBuilder result = new StringBuilder();
+        Map<String, String> symbols = context.getSymbolMap();
+        Set<String> blacklist = context.getBlacklistedSymbols();
+        Pattern wordPattern = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b"); // Capture valid identifiers (starting with a letter or underscore, followed by letters, digits, or underscores)
 
         for (String line : lines) {
-            line = line.trim(); // Remove leading and trailing whitespace
+            line = line.trim();
+            if (line.isEmpty()) continue;
 
-            if(line.startsWith("#")) {
-                MINIFIED_CODE.append(line).append("\n");
-                continue; // Skip pre-processor directives
+            /* Keep preprocessor directives intact (e.g., #import, #version, etc.) */
+            if (line.startsWith("#")) {
+                result.append(line).append("\n");
+                continue;
             }
 
-            if(line.startsWith("uniform")) {
-                // Find all uniform variable names using regex
-                Pattern uniformPattern = Pattern.compile("uniform\\s+\\w+\\s+(\\w+);");
-                Matcher uniformMatcher = uniformPattern.matcher(line);
-                while (uniformMatcher.find()) {
-                    UNIFORMS_NAMES.add(uniformMatcher.group(1)); // Add the uniform variable name to the set
-                }
-                MINIFIED_CODE.append(line).append("\n");
-                continue; // Skip uniforms
-            }
+            Matcher matcher = wordPattern.matcher(line);
+            StringBuilder rewrittenLine = new StringBuilder();
 
-            if(line.startsWith("attribute") || line.startsWith("varying")) {
-                // Treat attributes and varyings as uniforms for minification
-                Pattern uniformPattern = Pattern.compile("(?:attribute|varying)\\s+\\w+\\s+(\\w+);");
-                Matcher uniformMatcher = uniformPattern.matcher(line);
-                while (uniformMatcher.find()) {
-                    UNIFORMS_NAMES.add(uniformMatcher.group(1)); // Add the attribute/varying variable name to the set
-                }
-                MINIFIED_CODE.append(line).append("\n");
-                continue; // Skip attributes and varyings
-            }
-
-            // Find declared variables (e.g: float a; vec3 b; mat4 c;)
-            Pattern pattern = Pattern.compile("\\b(?:float|vec[234]|mat[234])\\s+(\\w+)");
-            Matcher matcher = pattern.matcher(line);
             while (matcher.find()) {
-                String varName = matcher.group(1);
-                if(!GlslVariables.isReserved(varName)) 
-                    VARIABLES.put(varName, "v" + variableCount++); // Assign a minified name (e.g: v0, v1, ...)
+                String word = matcher.group(1);
+                int start = matcher.start();
+
+                /* Check if the word is a property access (e.g., "obj.prop" or "obj['prop']") */
+                boolean isPropertyAccess = false;
+                if (start > 0) {
+                    char prevChar = line.charAt(start - 1);
+                    if (prevChar == '.') isPropertyAccess = true;
+                    else if (prevChar == ' ' || prevChar == '\t') {
+                        int p = start - 1;
+                        while (p >= 0 && Character.isWhitespace(line.charAt(p))) p--;
+                        if (p >= 0 && line.charAt(p) == '.') isPropertyAccess = true;
+                    }
+                }
+
+                /* Replacement if: it's not a property, it's in our table and not blacklisted */
+                if (!isPropertyAccess && symbols.containsKey(word) && !blacklist.contains(word)) matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(symbols.get(word)));
+                else matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(word));
+            }
+            matcher.appendTail(rewrittenLine);
+            result.append(rewrittenLine).append("\n");
+        }
+        return result.toString();
+    }
+
+    private static String cleanIdentifier(String raw) {
+        raw = raw.replaceAll("\\[.*?\\]", "").trim(); // Remove array brackets and trim whitespace (e.g., "array[10]" -> "array")
+        Matcher m = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b").matcher(raw); // Only keep valid identifier characters
+        return m.find() ? m.group(1) : "";
+    }
+
+    protected static String removeNewLines(List<String> lines) {
+        final StringBuilder code = new StringBuilder();
+        for (String line : lines) {
+            line = line.trim();
+
+            if (line.startsWith("#")) {
+                if (code.length() > 0 && code.charAt(code.length() - 1) != '\n') code.append('\n');
+                code.append(line).append("\n");
+                continue;
             }
 
-            // Generate a mapping for variable names to minified names
-            for(Map.Entry<String, String> entry : VARIABLES.entrySet()) {
-                String originalName = entry.getKey();
-                String minifiedName = entry.getValue();
-                if(UNIFORMS_NAMES.contains(originalName)) continue; // Skip uniforms
-                
-                // Use negative lookbehind to avoid replacing properties after . or ].
-                // This prevents replacing built-in properties like diffuse in gl_FrontLightProduct[i].diffuse
-                String replacementPattern = "(?<!\\.)(?<!\\]\\.)" + "\\b" + Pattern.quote(originalName) + "\\b";
-                line = line.replaceAll(replacementPattern, minifiedName);
-            }
-            MINIFIED_CODE.append(line).append("\n"); // Append the modified line to the result
+            if (!line.isEmpty()) code.append(line).append(" ");
         }
-        return MINIFIED_CODE.toString();
+        return code.toString().trim();
     }
 }

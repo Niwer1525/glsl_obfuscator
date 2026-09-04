@@ -1,0 +1,34 @@
+package com.niwer;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class MainTest {
+
+    public static void main(String[] args) {
+        {
+            final List<File> COLLECTION = new ArrayList<File>();
+            Collections.addAll(COLLECTION,
+                new File("src/test/resources/import_example/shader_with_import.glsl"),
+                new File("src/test/resources/import_example/model_calculator.glsl"),
+                new File("src/test/resources/import_example/math.glsl")
+            );
+            final var OBFUSCATED_CODE = GlslTask.obfuscateProject(COLLECTION);
+    
+            System.out.println("Obfuscated code for multiple-files:");
+            for (var entry : OBFUSCATED_CODE.entrySet()) {
+                System.out.println("File: " + entry.getKey().getName());
+                System.out.println(entry.getValue());
+                System.out.println();
+            }
+        }
+
+        {
+            final String OBFUSCATED_CODE = GlslTask.obfuscate(new File("src/test/resources/example_shader.frag"));
+            System.out.println("Obfuscated code for single-file:");
+            System.out.println(OBFUSCATED_CODE);
+        }
+    }
+}
