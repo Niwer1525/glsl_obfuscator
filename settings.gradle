@@ -11,3 +11,7 @@ plugins {
 }
 
 rootProject.name = 'glsl-obfuscator-plugin'
+
+include 'core'
+include 'gradle-plugin'
+include 'maven-plugin'

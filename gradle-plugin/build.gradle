@@ -1,0 +1,26 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+dependencies {
+    implementation project(':core')
+}
+
+gradlePlugin {
+    automatedPublishing = false // Disable automated publishing to avoid issues with GitHub Packages
+    plugins {
+        glslPlugin {
+            id = 'com.niwer.glsl_obfuscator'
+            implementationClass = 'com.niwer.GlslObfuscatorPlugin' // Main plugin class that implements Plugin<Project>
+        }
+    }
+}
+
+publishing {
+    publications {
+        gpr(MavenPublication) {
+            artifactId = 'glsl-obfuscator-gradle-plugin'
+            from components.java
+        }
+    }
+}
