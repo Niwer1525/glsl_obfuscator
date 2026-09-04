@@ -1,0 +1,8 @@
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'glsl-obfuscator-core'
+            from components.java
+        }
+    }
+}

@@ -1,77 +1,47 @@
 plugins {
-    id 'groovy'
-    id 'java-library'
     id 'maven-publish'
-    id 'java-gradle-plugin' // Required for Gradle plugin development
 }
 
-group = 'com.niwer'
 def releaseVersion = findProperty('releaseVersion') ?: '1.0.0'
-version = releaseVersion
-def publishedArtifactId = 'glsl-obfuscator-plugin'
 
-repositories {
-    mavenCentral()
-}
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'maven-publish'
 
-dependencies {
-    implementation gradleApi()
-    implementation localGroovy()
+    group = 'com.niwer'
+    version = releaseVersion
 
-    // Add Gradle TestKit for testing Gradle plugin
-    testImplementation gradleTestKit()
-
-    // Use JUnit Jupiter for testing.
-    testImplementation "org.junit.jupiter:junit-jupiter:5.12.1"
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-    withSourcesJar();
-}
-
-gradlePlugin {
-    automatedPublishing = false // Disable automated publishing to avoid issues with GitHub Packages
-    plugins {
-        glslPlugin {
-            id = 'com.niwer.glsl_obfuscator'
-            implementationClass = 'com.niwer.GlslObfuscatorPlugin' // Main plugin class that implements Plugin<Project>
-        }
-    }
-}
-
-task buildJar(type: Jar) {
-    archiveBaseName.set(publishedArtifactId)
-    from sourceSets.main.output
-    manifest {
-        attributes 'Implementation-Title': 'GLSL Obfuscator Plugin', 'Implementation-Version': version
-    }
-}
-
-publishing {
-    publications {
-        gpr(MavenPublication) {
-            groupId = 'com.niwer'
-            artifactId = publishedArtifactId
-            version = project.version
-            from components.java
-        }
-    }
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = "https://maven.pkg.github.com/Niwer1525/glsl_obfuscator"
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
+        mavenCentral()
+    }
+
+    dependencies {
+        // Use JUnit Jupiter for testing.
+        testImplementation "org.junit.jupiter:junit-jupiter:5.12.1"
+        testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+        withSourcesJar()
+    }
+
+    publishing {
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = "https://maven.pkg.github.com/Niwer1525/glsl_obfuscator"
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
             }
         }
     }
-}
 
-tasks.named('test') {
-    // Use JUnit Platform for unit tests.
-    useJUnitPlatform()
+    tasks.named('test') {
+        // Use JUnit Platform for unit tests.
+        useJUnitPlatform()
+    }
 }

@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.gradle;
 
 import java.nio.file.Files;
 
@@ -6,13 +6,16 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileTree;
 
-public class GlslObfuscatorPlugin implements Plugin<Project> {
+import com.niwer.GlslTask;
+import com.niwer.Utils;
+
+public class GradleGlslObfuscatorPlugin implements Plugin<Project> {
 
     public static final String TASK_NAME = "obfuscateGlsl";
 
     @Override
     public void apply(Project project) {
-        final GlslObfuscatorExtension EXTENSION = project.getExtensions().create(TASK_NAME, GlslObfuscatorExtension.class);
+        final GradleGlslObfuscatorExtension EXTENSION = project.getExtensions().create(TASK_NAME, GradleGlslObfuscatorExtension.class);
 
         project.getTasks().register(TASK_NAME, task -> {
             task.setGroup("glsl");

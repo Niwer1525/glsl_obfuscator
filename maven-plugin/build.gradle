@@ -1,0 +1,14 @@
+dependencies {
+    implementation project(':core')
+    compileOnly 'org.apache.maven:maven-plugin-api:3.9.6'
+    compileOnly 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.11.0'
+}
+
+publishing {
+    publications {
+        gpr(MavenPublication) {
+            artifactId = 'glsl-obfuscator-maven-plugin'
+            from components.java
+        }
+    }
+}

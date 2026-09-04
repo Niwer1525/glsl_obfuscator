@@ -1,6 +1,6 @@
-package com.niwer;
+package com.niwer.gradle;
 
-public class GlslObfuscatorExtension {
+public class GradleGlslObfuscatorExtension {
 
     private String source = "build";
 
