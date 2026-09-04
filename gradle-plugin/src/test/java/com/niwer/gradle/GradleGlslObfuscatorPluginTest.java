@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.gradle;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,7 +10,7 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-class GlslObfuscatorPluginTest {
+class GradleGlslObfuscatorPluginTest {
 
     @TempDir
     File testProjectDir;
@@ -46,7 +46,7 @@ class GlslObfuscatorPluginTest {
             .withProjectDir(testProjectDir)
             .withGradleVersion("9.1.0") // Because of the Java 21/25 compatibility, we need to use Gradle 9.1 or higher
             .withPluginClasspath() // It will automatically include the plugin from the classpath
-            .withArguments(GlslObfuscatorPlugin.TASK_NAME) // Our custom task to test
+            .withArguments(GradleGlslObfuscatorPlugin.TASK_NAME) // Our custom task to test
             .build();
 
         assertTrue(RESULT.getOutput().contains("SUCCESS"), "GLSL obfuscation task should run successfully");
