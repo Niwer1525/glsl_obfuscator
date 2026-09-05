@@ -28,21 +28,25 @@ jobs:
       - name: Run Tests (JUnit)
         run: ./gradlew test
 
-      - name: Build JAR
-        run: ./gradlew assemble -PreleaseVersion=${GITHUB_REF_NAME#v}
-
       - name: Prepare Fixed Name JARs
         run: |
-          # Main JAR (explicitly exclude sources JAR)
-          cp $(ls build/libs/glsl-obfuscator-plugin-*.jar | grep -v -- '-sources\.jar$') build/libs/glsl-obfuscator-plugin.jar
-          # Sources JAR
-          cp build/libs/glsl-obfuscator-plugin-*-sources.jar build/libs/glsl-obfuscator-plugin-sources.jar
+          mkdir -p release-artifacts
+
+          # Copy the JARs of the core library
+          cp $(ls core/build/libs/*.jar | grep -v -- '-sources\.jar$' | head -n 1) release-artifacts/glsl-obfuscator-core.jar
+          cp core/build/libs/*-sources.jar release-artifacts/glsl-obfuscator-core-sources.jar
+
+          # Copy the JARs of the Gradle plugin
+          cp $(ls gradle-plugin/build/libs/*.jar | grep -v -- '-sources\.jar$' | head -n 1) release-artifacts/glsl-obfuscator-gradle-plugin.jar
+          cp gradle-plugin/build/libs/*-sources.jar release-artifacts/glsl-obfuscator-gradle-plugin-sources.jar
+
+          # Copy the JARs of the Maven plugin
+          cp $(ls maven-plugin/build/libs/*.jar | grep -v -- '-sources\.jar$' | head -n 1) release-artifacts/glsl-obfuscator-maven-plugin.jar
+          cp maven-plugin/build/libs/*-sources.jar release-artifacts/glsl-obfuscator-maven-plugin-sources.jar
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            build/libs/glsl-obfuscator-plugin.jar
-            build/libs/glsl-obfuscator-plugin-sources.jar
+          files: release-artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
