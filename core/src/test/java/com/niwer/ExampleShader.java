@@ -3,7 +3,7 @@ package com.niwer;
 class ExampleShader {
 
     public static final String TEST_SHADER = """
-        #version 120
+        ##version 120
 
         #ifdef GL_ES
         precision mediump float;
@@ -14,6 +14,7 @@ class ExampleShader {
         uniform float uTime;
         uniform int uGogglesType;
 
+        // @keep random
         float random(vec2 st) {
             return fract(sin(dot(st, vec2(12.9898, 78.233))) * 23758.5453123); // 23758
         }
@@ -22,6 +23,7 @@ class ExampleShader {
             vec2 texCoord = gl_FragCoord.xy/uResolution;
             vec4 sceneColor = texture2D(uScene, texCoord);
             
+            /* @keep uv, noise */
             vec2 uv = vec2(0.35 * sin(uTime * 10), 0.35 * cos(uTime * 10));
             vec3 noise = vec3(random(floor((texCoord + uv) * 250)) * 1.2); // 250 is the noise scale
             sceneColor.xy += noise.xy * 0.005;

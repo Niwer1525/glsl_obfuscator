@@ -36,7 +36,7 @@
                     <type>boolean</type>
                     <required>false</required>
                     <editable>true</editable>
-                    <description>Whether to link symbols across shader files (#moj_import).</description>
+                    <description>Whether to link symbols across shader files (#import or #include).</description>
                 </parameter>
                 <parameter>
                     <name>minify</name>
@@ -44,6 +44,20 @@
                     <required>false</required>
                     <editable>true</editable>
                     <description>Whether to minify the output code.</description>
+                </parameter>
+                <parameter>
+                    <name>excludedSymbols</name>
+                    <type>java.util.List</type>
+                    <required>false</required>
+                    <editable>true</editable>
+                    <description>List of variable or function identifiers to preserve.</description>
+                </parameter>
+                <parameter>
+                    <name>excludedFiles</name>
+                    <type>java.util.List</type>
+                    <required>false</required>
+                    <editable>true</editable>
+                    <description>Ant-style patterns of files to ignore completely.</description>
                 </parameter>
             </parameters>
         </mojo>

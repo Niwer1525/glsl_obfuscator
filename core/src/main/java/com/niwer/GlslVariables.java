@@ -7,14 +7,19 @@ public class GlslVariables {
 
     private GlslVariables() {}
 
-    // private static final Pattern PREPROCESSOR_PATTERN = Pattern.compile("^\\s*#.*$");
     public static final String PREPROCESSOR_DIRECTIVE_REGEX = "^\\s*#\\s*\\w+.*$";
+
     public static final Pattern IO_PATTERN = Pattern.compile(
         "\\b(?:uniform|attribute|varying|in|out|layout\\s*\\([^)]*\\)\\s*(?:in|out)?)\\s+(?:\\w+\\s+)*(\\w+)\\s+([\\w\\s,\\[\\]]+);"
     ); // This regex captures uniforms, attributes, varyings, in, out (including optional qualifiers like 'flat', 'smooth', 'centroid')
+
     public static final Pattern DECLARATION_PATTERN = Pattern.compile(
         "\\b(?:void|int|uint|bool|float|double|vec[234]|u?ivec[234]|bvec[234]|dvec[234]|mat[234](?:x[234])?|sampler[123]D|samplerCube)\\s+([\\w\\s,\\[\\]=().+/*-]+?)(?=[;{])"
     ); // This regex captures variable declarations, including multiple declarations in a single line (e.g., "float a, b = 1.0, c[2];")
+
+    public static final Pattern KEEP_DIRECTIVE_PATTERN = Pattern.compile(
+        "(?://|/\\*)\\s*@keep\\s+([\\w\\s,]+)"
+    ); // This regex captures the @keep directive in comments, allowing multiple symbols to be specified (e.g., "// @keep a, b, c")
 
     public static final Set<String> GLSL_KEYWORDS = Set.of(
         "attribute", "const", "uniform", "varying", "break", "continue",

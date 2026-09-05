@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +44,18 @@ public class MavenGlslMojo extends AbstractMojo {
     @Parameter(property = "glsl.minify", defaultValue = "true")
     private boolean minify;
 
+    /**
+     * List of symbols that should not be obfuscated.
+     */
+    @Parameter(property = "glsl.excludedSymbols")
+    private List<String> excludedSymbols;
+
+    /**
+     * List of files that should not be obfuscated.
+     */
+    @Parameter(property = "glsl.excludedFiles")
+    private List<String> excludedFiles;
+
     private static final List<String> EXTENSIONS = List.of(
         ".glsl", ".vert", ".frag", ".fsh", ".vsh"
     );
@@ -73,7 +86,7 @@ public class MavenGlslMojo extends AbstractMojo {
             /* Process all files together (linked for #import or #include) */
             getLog().info("Obfuscating " + shaderFiles.size() + " GLSL files with linked symbols...");
             try {
-                final Map<File, String> RESULTS = GlslTask.obfuscateProject(shaderFiles, minify);
+                final Map<File, String> RESULTS = GlslTask.obfuscateProject(shaderFiles, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of());
                 for (Map.Entry<File, String> entry : RESULTS.entrySet()) Files.writeString(entry.getKey().toPath(), entry.getValue());
             } catch (Exception e) {
                 throw new MojoExecutionException("Error during multi-file GLSL obfuscation", e);
@@ -83,7 +96,7 @@ public class MavenGlslMojo extends AbstractMojo {
             for (final File FILE : shaderFiles) {
                 try {
                     getLog().info("Obfuscating GLSL file: " + FILE.getAbsolutePath());
-                    String obfuscated = GlslTask.obfuscate(FILE, minify);
+                    String obfuscated = GlslTask.obfuscate(FILE, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of());
                     Files.writeString(FILE.toPath(), obfuscated);
                 } catch (Exception e) {
                     getLog().error("Error processing file " + FILE.getAbsolutePath(), e);

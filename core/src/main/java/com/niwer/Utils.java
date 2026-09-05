@@ -1,5 +1,7 @@
 package com.niwer;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 public class Utils {
@@ -14,6 +16,20 @@ public class Utils {
      */
     public static List<String> getLines(String shaderCode) {
         return List.of(shaderCode.split("\n")); // Split the shader code into lines
+    }
+
+    /**
+     * This will read a file and return its content as a list of lines.
+     * 
+     * @param file The file to read.
+     * @return A list of strings, each representing a line of the file.
+     */
+    public static List<String> getLines(File file) {
+        try {
+            return Files.readAllLines(file.toPath());
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading file: " + file.getAbsolutePath(), e);
+        }
     }
 
     /**

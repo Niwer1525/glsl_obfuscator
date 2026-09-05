@@ -9,6 +9,7 @@ public class MainTest {
 
     public static void main(String[] args) {
         {
+            /* Obfuscate a project with multiple shader files */
             final List<File> COLLECTION = new ArrayList<File>();
             Collections.addAll(COLLECTION,
                 new File("src/test/resources/import_example/shader_with_import.glsl"),
@@ -26,6 +27,7 @@ public class MainTest {
         }
 
         {
+            /* Obfuscate a single shader file */
             final String OBFUSCATED_CODE = GlslTask.obfuscate(new File("src/test/resources/example_shader.frag"), true);
             System.out.println("Obfuscated code for single-file:");
             System.out.println(OBFUSCATED_CODE);

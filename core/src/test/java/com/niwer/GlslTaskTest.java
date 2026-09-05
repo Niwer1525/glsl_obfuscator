@@ -1,5 +1,6 @@
 package com.niwer;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,6 +22,22 @@ class GlslTaskTest {
     @Test void testObfuscateFromString() {
         final String OBFUSCATED_CODE = GlslTask.obfuscate(ExampleShader.TEST_SHADER, true);
         assertNotNull(OBFUSCATED_CODE);
+
+        final String OBFUSCATED_CODE_NON_MINIFIED = GlslTask.obfuscate(ExampleShader.TEST_SHADER, false);
+        assertNotNull(OBFUSCATED_CODE_NON_MINIFIED);
+    }
+
+    @Test void testObfuscateWithInitialExcludedSymbolsNull() {
+        assertThrows(RuntimeException.class, () -> GlslTask.obfuscate(ExampleShader.TEST_SHADER, true, null));
+        
+        final List<File> COLLECTION = new ArrayList<File>();
+        Collections.addAll(COLLECTION,
+            new File("src/test/resources/import_example/shader_with_import.glsl"),
+            new File("src/test/resources/import_example/model_calculator.glsl"),
+            new File("src/test/resources/import_example/math.glsl")
+        );
+        assertThrows(RuntimeException.class, () -> GlslTask.obfuscateProject(COLLECTION, true, null));
+        assertThrows(RuntimeException.class, () -> GlslTask.obfuscateProject(null, true));
     }
 
     @Test void testObfuscateFromNonExistingString() {
@@ -47,6 +64,14 @@ class GlslTaskTest {
         );
         final var OBFUSCATED_CODE = GlslTask.obfuscateProject(COLLECTION, true);
         assertNotNull(OBFUSCATED_CODE);
+
+        final var OBFUSCATED_CODE_NON_MINIFIED = GlslTask.obfuscateProject(COLLECTION, false);
+        assertNotNull(OBFUSCATED_CODE_NON_MINIFIED);
+    }
+
+    @Test void testObfuscateFromFilesWithNullAndEmpty() {
+        assertDoesNotThrow(() -> GlslTask.obfuscateProject(Collections.emptyList(), true));
+        assertThrows(RuntimeException.class, () -> GlslTask.obfuscateProject(null, true));
     }
 
     @Test void testObfuscateFromNonExistingLines() {

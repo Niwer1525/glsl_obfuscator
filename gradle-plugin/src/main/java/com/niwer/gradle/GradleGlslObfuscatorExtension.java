@@ -1,9 +1,14 @@
 package com.niwer.gradle;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class GradleGlslObfuscatorExtension {
     private String source = "build";
     private boolean linked = true; // true = share symbols (#import or #include), false = file by file
     private boolean minify = true; // true = minify GLSL, false = only obfuscate
+    private List<String> excludedSymbols = new ArrayList<>(); // List of symbols to exclude from obfuscation
+    private List<String> excludedFiles = new ArrayList<>(); // List of files to exclude from obfuscation
 
     public String getSource() {
         return source == null || source.isBlank() ? "build" : source;
@@ -27,5 +32,21 @@ public class GradleGlslObfuscatorExtension {
 
     public void setMinify(boolean minify) {
         this.minify = minify;
+    }
+
+    public List<String> getExcludedSymbols() {
+        return excludedSymbols;
+    }
+
+    public void setExcludedSymbols(List<String> s) { 
+        this.excludedSymbols = s;
+    }
+
+    public List<String> getExcludedFiles() {
+        return excludedFiles;
+    }
+
+    public void setExcludedFiles(List<String> f) {
+        this.excludedFiles = f;
     }
 }

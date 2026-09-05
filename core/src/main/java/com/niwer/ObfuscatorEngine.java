@@ -15,14 +15,19 @@ public class ObfuscatorEngine {
      * 
      * @param lines The GLSL shader code to obfuscate as a list of lines.
      * @param shouldMinify If true, the shader code will be minified before obfuscation.
+     * @param initialExcludedSymbols A set of symbols to exclude from obfuscation (Generally provided by the user trough a plugin configuration).
      * @return The obfuscated GLSL shader code as a string.
      */
-    public static String obfuscateSingle(List<String> lines, boolean shouldMinify) {
-        final ObfuscationContext CONTEXT = new ObfuscationContext();
-        final List<String> MINIFIED = Utils.getLines(clearComments(lines));
+    public static String obfuscateSingle(List<String> lines, boolean shouldMinify, Set<String> initialExcludedSymbols) {
+        if (lines == null) throw new RuntimeException("Lines is null");
+        if (lines.isEmpty()) return "";
+        if (initialExcludedSymbols == null) throw new RuntimeException("Initial excluded symbols is null");
+
+        final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols);
+        collectSymbols(lines, CONTEXT);
         
-        collectSymbols(MINIFIED, CONTEXT);
-        final String OBFUSCATED = applyObfuscation(MINIFIED, CONTEXT);
+        final List<String> CLEANED = Utils.getLines(clearComments(lines));
+        final String OBFUSCATED = applyObfuscation(CLEANED, CONTEXT);
         return shouldMinify ? removeNewLines(OBFUSCATED) : OBFUSCATED;
     }
 
@@ -53,6 +58,18 @@ public class ObfuscatorEngine {
     protected static void collectSymbols(List<String> lines, ObfuscationContext context) {
         for (String line : lines) {
             line = line.trim();
+            if (line.isEmpty()) continue;
+
+            Matcher keepMatcher = GlslVariables.KEEP_DIRECTIVE_PATTERN.matcher(line);
+            while (keepMatcher.find()) {
+                String[] symbols = keepMatcher.group(1).split("[,\\s]+");
+                for (String sym : symbols) {
+                    sym = sym.trim();
+                    if (!sym.isEmpty()) context.blacklist(sym);
+                }
+            }
+
+            line = line.replaceAll("//.*", "").replaceAll("/\\*.*?\\*/", "").trim(); // Remove comments for symbol collection
             if (line.isEmpty()) continue;
             if (line.startsWith("#")) continue; // Ignore preprocessor directives
 

@@ -1,5 +1,6 @@
 package com.niwer;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -9,6 +10,12 @@ public class ObfuscationContext {
     private final Map<String, String> SYMBOL_MAP = new HashMap<>();
     private final Set<String> BLACK_LISTED_SYMBOLS = new HashSet<>(); // uniforms, builtins, in, out
     private int counter = 0;
+
+    protected ObfuscationContext() {}
+
+    protected ObfuscationContext(Collection<String> initialExcludes) {
+        if (initialExcludes != null) this.BLACK_LISTED_SYMBOLS.addAll(initialExcludes);
+    }
 
     public void blacklist(String name) {
         BLACK_LISTED_SYMBOLS.add(name);

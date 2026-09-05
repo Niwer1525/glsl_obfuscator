@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -35,11 +36,17 @@ public class GradleGlslObfuscatorPlugin implements Plugin<Project> {
     private static void obfuscateShaderFiles(Project project, GradleGlslObfuscatorExtension extension) {
         final String SOURCE_DIR = extension.getSource();
 
-        final FileTree SHADER_FILES = project.fileTree(project.file(SOURCE_DIR)).matching(pattern -> pattern.include(
-            "**/*.glsl",
-            "**/*.vert", "**/*.frag",
-            "**/*.fsh", "**/*.vsh"
-        ));
+        final FileTree SHADER_FILES = project.fileTree(project.file(SOURCE_DIR)).matching(pattern -> {
+            /* Match all GLSL files */
+            pattern.include(
+                "**/*.glsl",
+                "**/*.vert", "**/*.frag",
+                "**/*.fsh", "**/*.vsh"
+            );
+
+            /* Exclude specified files */
+            if (extension.getExcludedFiles() != null) pattern.exclude(extension.getExcludedFiles());
+        });
 
         /* Process the shader files */
         final List<File> FILES_LIST = new ArrayList<>(SHADER_FILES.getFiles());
@@ -48,7 +55,7 @@ public class GradleGlslObfuscatorPlugin implements Plugin<Project> {
         if (extension.isLinked()) {
             /* Process all files together (linked for #import or #include) */
             Utils.print("Obfuscating " + FILES_LIST.size() + " GLSL files with linked symbols...");
-            Map<File, String> obfuscatedResults = GlslTask.obfuscateProject(FILES_LIST, extension.shouldMinify());
+            Map<File, String> obfuscatedResults = GlslTask.obfuscateProject(FILES_LIST, extension.shouldMinify(), extension.getExcludedSymbols() != null ? Set.copyOf(extension.getExcludedSymbols()) : Set.of());
             obfuscatedResults.forEach((file, content) -> {
                 try {
                     Files.writeString(file.toPath(), content);
@@ -61,7 +68,7 @@ public class GradleGlslObfuscatorPlugin implements Plugin<Project> {
             for (File file : FILES_LIST) {
                 try {
                     Utils.print("Minifying GLSL file: " + file.getAbsolutePath());
-                    Files.writeString(file.toPath(), GlslTask.obfuscate(file, extension.shouldMinify()));
+                    Files.writeString(file.toPath(), GlslTask.obfuscate(file, extension.shouldMinify(), extension.getExcludedSymbols() != null ? Set.copyOf(extension.getExcludedSymbols()) : Set.of()));
                 } catch (Exception e) {
                     throw new RuntimeException("Error processing GLSL file: " + file.getAbsolutePath(), e);
                 }

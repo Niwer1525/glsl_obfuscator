@@ -9,6 +9,10 @@ void main() {
 
     #test_import <model_calculator.glsl>
 
+    /* @keep uv, color */
+    vec2 uv = vec2(u, v);
+    vec4 color = vec4(uv, 0.0, 1.0);
+
     if(model > 5) {
         gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
     } else {

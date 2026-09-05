@@ -3,6 +3,8 @@ package com.niwer;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -32,5 +34,16 @@ class UtilsTest {
     @Test void testPrint() {
         // This is just to make sure the print method doesn't throw an exception.
         assertDoesNotThrow(() -> Utils.print("Hello, World!"));
+    }
+
+    @Test void testGetLinesFromFile() {
+        final var FILE = new java.io.File("src/test/resources/example_shader.frag");
+        final List<String> LINES = Utils.getLines(FILE);
+        assertNotNull(LINES);
+        assertTrue(LINES.size() > 0, "The file should contain lines.");
+    }
+
+    @Test void testGetLinesFromNullFile() {
+        assertThrows(RuntimeException.class, () -> Utils.getLines((java.io.File)null));
     }
 }
