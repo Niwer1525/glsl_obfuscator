@@ -14,18 +14,19 @@ public class ObfuscatorEngine {
      * Obfuscate a single GLSL shader code by minifying its content and variable names.
      * 
      * @param lines The GLSL shader code to obfuscate as a list of lines.
+     * @param shouldMinify If true, the shader code will be minified before obfuscation.
      * @return The obfuscated GLSL shader code as a string.
      */
-    public static String obfuscateSingle(List<String> lines) {
-        ObfuscationContext context = new ObfuscationContext();
-        List<String> minified = Utils.getLines(minify(lines));
+    public static String obfuscateSingle(List<String> lines, boolean shouldMinify) {
+        final ObfuscationContext CONTEXT = new ObfuscationContext();
+        final List<String> MINIFIED = Utils.getLines(clearComments(lines));
         
-        collectSymbols(minified, context);
-        String obfuscated = applyObfuscation(minified, context);
-        return removeNewLines(Utils.getLines(obfuscated));
+        collectSymbols(MINIFIED, CONTEXT);
+        final String OBFUSCATED = applyObfuscation(MINIFIED, CONTEXT);
+        return shouldMinify ? removeNewLines(OBFUSCATED) : OBFUSCATED;
     }
 
-    protected static String minify(List<String> lines) {
+    protected static String clearComments(List<String> lines) {
         // Join lines into a single string to handle multi-line comments and then process line by line
         String rawCode = String.join("\n", lines);
 
@@ -133,7 +134,11 @@ public class ObfuscatorEngine {
         return m.find() ? m.group(1) : "";
     }
 
-    protected static String removeNewLines(List<String> lines) {
+    protected static String removeNewLines(String code) {
+        return removeNewLines(Utils.getLines(code));
+    }
+
+    private static String removeNewLines(List<String> lines) {
         final StringBuilder code = new StringBuilder();
         for (String line : lines) {
             line = line.trim();

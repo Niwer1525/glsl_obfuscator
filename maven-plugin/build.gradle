@@ -4,6 +4,12 @@ dependencies {
     compileOnly 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.11.0'
 }
 
+processResources {
+    filesMatching('META-INF/maven/plugin.xml') {
+        expand(projectVersion: project.version)
+    }
+}
+
 publishing {
     publications {
         gpr(MavenPublication) {

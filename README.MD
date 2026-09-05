@@ -88,6 +88,8 @@ apply plugin: 'com.niwer.glsl_obfuscator'
 ```groovy
 obfuscateGlsl {
     source = 'src/main/resources/assets/shaders'
+    linked = true // Enable multi-file obfuscation for projects with #import, #include or #moj_import directives
+    minify = true // Set to false to keep formatting
 }
 ```
 
@@ -96,8 +98,17 @@ The obfuscation task automatically hooks into processResources, and can also be 
 ### Maven Plugin
 
 ```xml
+<pluginRepositories>
+    <pluginRepository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </pluginRepository>
+</pluginRepositories>
+```
+
+```xml
 <plugin>
-    <groupId>com.niwer</groupId>
+    <groupId>com.github.Niwer1525.glsl_obfuscator</groupId>
     <artifactId>glsl-obfuscator-maven-plugin</artifactId>
     <version>1.0.7</version>
     <executions>
@@ -110,6 +121,8 @@ The obfuscation task automatically hooks into processResources, and can also be 
     </executions>
     <configuration>
         <sourceDir>${project.build.outputDirectory}</sourceDir>
+        <linked>true</linked> <!-- Enable multi-file obfuscation for projects with #import, #include or #moj_import directives -->
+        <minify>true</minify> <!-- Set to false to keep formatting -->
     </configuration>
 </plugin>
 ```
@@ -143,13 +156,13 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-// Single file obfuscation
-String singleResult = GlslTask.obfuscate(new File("path/to/shader.fsh"));
+// Single file obfuscation & minification
+String singleResult = GlslTask.obfuscate(new File("path/to/shader.fsh"), true);
 
-// Multi-file obfuscation with synchronized symbol maps
+// Multi-file obfuscation & minification with synchronized symbol maps
 Map<File, String> projectResults = GlslTask.obfuscateProject(List.of(
     new File("shaders/main.fsh"),
     new File("shaders/math.glsl"),
     new File("shaders/model_calculator.glsl")
-));
+), true);
 ```

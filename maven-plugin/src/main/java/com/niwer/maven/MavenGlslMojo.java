@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.maven.plugin.AbstractMojo;
@@ -29,6 +31,18 @@ public class MavenGlslMojo extends AbstractMojo {
     @Parameter(property = "glsl.sourceDir", defaultValue = "${project.build.outputDirectory}")
     private File sourceDir;
 
+    /**
+     * Set to true to link symbols across shaders (#moj_import), or false for isolated files.
+     */
+    @Parameter(property = "glsl.linked", defaultValue = "true")
+    private boolean linked;
+
+    /**
+     * Set to true to minify the GLSL code, or false to keep formatting.
+     */
+    @Parameter(property = "glsl.minify", defaultValue = "true")
+    private boolean minify;
+
     private static final List<String> EXTENSIONS = List.of(
         ".glsl", ".vert", ".frag", ".fsh", ".vsh"
     );
@@ -36,31 +50,50 @@ public class MavenGlslMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         if (!sourceDir.exists()) {
-            getLog().warn("Dossier introuvable : " + sourceDir.getAbsolutePath());
+            getLog().warn("Source directory not found : " + sourceDir.getAbsolutePath());
             return;
         }
 
+        List<File> shaderFiles;
         try (Stream<Path> paths = Files.walk(sourceDir.toPath())) {
-            paths.filter(Files::isRegularFile)
-                 .filter(this::isShaderFile)
-                 .forEach(this::processFile);
+            shaderFiles = paths.filter(Files::isRegularFile)
+                               .filter(this::isShaderFile)
+                               .map(Path::toFile)
+                               .collect(Collectors.toList());
         } catch (IOException e) {
-            throw new MojoExecutionException("Error during shader file processing", e);
+            throw new MojoExecutionException("Error during shader file collection", e);
+        }
+
+        if (shaderFiles.isEmpty()) {
+            getLog().info("No shader files found in: " + sourceDir.getAbsolutePath());
+            return;
+        }
+
+        if (linked) {
+            /* Process all files together (linked for #import or #include) */
+            getLog().info("Obfuscating " + shaderFiles.size() + " GLSL files with linked symbols...");
+            try {
+                final Map<File, String> RESULTS = GlslTask.obfuscateProject(shaderFiles, minify);
+                for (Map.Entry<File, String> entry : RESULTS.entrySet()) Files.writeString(entry.getKey().toPath(), entry.getValue());
+            } catch (Exception e) {
+                throw new MojoExecutionException("Error during multi-file GLSL obfuscation", e);
+            }
+        } else {
+            /* One file at a time */
+            for (final File FILE : shaderFiles) {
+                try {
+                    getLog().info("Obfuscating GLSL file: " + FILE.getAbsolutePath());
+                    String obfuscated = GlslTask.obfuscate(FILE, minify);
+                    Files.writeString(FILE.toPath(), obfuscated);
+                } catch (Exception e) {
+                    getLog().error("Error processing file " + FILE.getAbsolutePath(), e);
+                }
+            }
         }
     }
 
     private boolean isShaderFile(Path path) {
-        String name = path.getFileName().toString().toLowerCase();
-        return EXTENSIONS.stream().anyMatch(name::endsWith);
-    }
-
-    private void processFile(Path path) {
-        try {
-            getLog().info("Minifying GLSL file: " + path);
-            String obfuscated = GlslTask.obfuscate(path.toFile());
-            Files.writeString(path, obfuscated);
-        } catch (Exception e) {
-            getLog().error("Error processing file " + path, e);
-        }
+        final String NAME = path.getFileName().toString().toLowerCase();
+        return EXTENSIONS.stream().anyMatch(NAME::endsWith);
     }
 }

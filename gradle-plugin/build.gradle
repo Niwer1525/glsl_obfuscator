@@ -11,7 +11,7 @@ gradlePlugin {
     plugins {
         glslPlugin {
             id = 'com.niwer.glsl_obfuscator'
-            implementationClass = 'com.niwer.GradleGlslObfuscatorPlugin' // Main plugin class that implements Plugin<Project>
+            implementationClass = 'com.niwer.gradle.GradleGlslObfuscatorPlugin' // Main plugin class that implements Plugin<Project>
         }
     }
 }

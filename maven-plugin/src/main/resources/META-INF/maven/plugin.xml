@@ -1,0 +1,51 @@
+<plugin>
+    <name>GLSL Obfuscator Maven Plugin</name>
+    <description>Obfuscates GLSL shader files during the Maven resource-processing phase.</description>
+    <groupId>com.niwer</groupId>
+    <artifactId>glsl-obfuscator-maven-plugin</artifactId>
+    <version>${projectVersion}</version>
+    <goalPrefix>glsl</goalPrefix>
+    <isolatedRealm>false</isolatedRealm>
+    <inheritedByDefault>true</inheritedByDefault>
+    <requiredJavaVersion>21</requiredJavaVersion>
+    <mojos>
+        <mojo>
+            <goal>obfuscate</goal>
+            <description>Obfuscates GLSL shader files.</description>
+            <requiresDependencyResolution>runtime</requiresDependencyResolution>
+            <requiresProject>true</requiresProject>
+            <requiresReports>false</requiresReports>
+            <aggregator>false</aggregator>
+            <requiresDirectInvocation>false</requiresDirectInvocation>
+            <phase>process-resources</phase>
+            <implementation>com.niwer.maven.MavenGlslMojo</implementation>
+            <language>java</language>
+            <instantiationStrategy>per-lookup</instantiationStrategy>
+            <executionStrategy>once-per-session</executionStrategy>
+            <threadSafe>false</threadSafe>
+            <parameters>
+                <parameter>
+                    <name>sourceDir</name>
+                    <type>java.io.File</type>
+                    <required>false</required>
+                    <editable>true</editable>
+                    <description>Source directory containing GLSL files.</description>
+                </parameter>
+                <parameter>
+                    <name>linked</name>
+                    <type>boolean</type>
+                    <required>false</required>
+                    <editable>true</editable>
+                    <description>Whether to link symbols across shader files (#moj_import).</description>
+                </parameter>
+                <parameter>
+                    <name>minify</name>
+                    <type>boolean</type>
+                    <required>false</required>
+                    <editable>true</editable>
+                    <description>Whether to minify the output code.</description>
+                </parameter>
+            </parameters>
+        </mojo>
+    </mojos>
+</plugin>

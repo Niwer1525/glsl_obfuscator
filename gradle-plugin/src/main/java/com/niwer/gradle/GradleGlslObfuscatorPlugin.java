@@ -1,6 +1,10 @@
 package com.niwer.gradle;
 
+import java.io.File;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -20,32 +24,48 @@ public class GradleGlslObfuscatorPlugin implements Plugin<Project> {
         project.getTasks().register(TASK_NAME, task -> {
             task.setGroup("glsl");
             task.setDescription("Obfuscates GLSL shader files from the configured source directory.");
-            task.doLast(t -> obfuscateShaderFiles(project, EXTENSION.getSource()));
+            task.doLast(t -> obfuscateShaderFiles(project, EXTENSION));
         });
 
         // Attach to processResources only when that task exists in the target project.
         project.getTasks().matching(task -> "processResources".equals(task.getName()))
-            .configureEach(task -> task.doLast(t -> obfuscateShaderFiles(project, EXTENSION.getSource())));
+            .configureEach(task -> task.doLast(t -> obfuscateShaderFiles(project, EXTENSION)));
     }
 
-    private static void obfuscateShaderFiles(Project project, String sourceDir) {
-        final String SOURCE_DIR = (sourceDir == null || sourceDir.isBlank()) ? "build" : sourceDir;
+    private static void obfuscateShaderFiles(Project project, GradleGlslObfuscatorExtension extension) {
+        final String SOURCE_DIR = extension.getSource();
 
         final FileTree SHADER_FILES = project.fileTree(project.file(SOURCE_DIR)).matching(pattern -> pattern.include(
             "**/*.glsl",
             "**/*.vert", "**/*.frag",
             "**/*.fsh", "**/*.vsh"
         ));
-        
-        /* Traverse the shader files */
-        SHADER_FILES.forEach(file -> {
-            try {
-                final String OBFUSCATED = GlslTask.obfuscate(file); // Obfuscate the GLSL file content
-                Utils.print("Minifying GLSL file: " + file.getAbsolutePath()); // Log the file being processed
-                Files.writeString(file.toPath(), OBFUSCATED);
-            } catch (Exception e) {
-                throw new RuntimeException("Error processing GLSL file: " + file.getAbsolutePath(), e);
+
+        /* Process the shader files */
+        final List<File> FILES_LIST = new ArrayList<>(SHADER_FILES.getFiles());
+        if (FILES_LIST.isEmpty()) return;
+
+        if (extension.isLinked()) {
+            /* Process all files together (linked for #import or #include) */
+            Utils.print("Obfuscating " + FILES_LIST.size() + " GLSL files with linked symbols...");
+            Map<File, String> obfuscatedResults = GlslTask.obfuscateProject(FILES_LIST, extension.shouldMinify());
+            obfuscatedResults.forEach((file, content) -> {
+                try {
+                    Files.writeString(file.toPath(), content);
+                } catch (Exception e) {
+                    throw new RuntimeException("Error writing GLSL file: " + file.getAbsolutePath(), e);
+                }
+            });
+        } else {
+            /* One file at a time */
+            for (File file : FILES_LIST) {
+                try {
+                    Utils.print("Minifying GLSL file: " + file.getAbsolutePath());
+                    Files.writeString(file.toPath(), GlslTask.obfuscate(file, extension.shouldMinify()));
+                } catch (Exception e) {
+                    throw new RuntimeException("Error processing GLSL file: " + file.getAbsolutePath(), e);
+                }
             }
-        });
+        }
     }
 }

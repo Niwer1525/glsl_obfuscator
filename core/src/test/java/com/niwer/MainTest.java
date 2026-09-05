@@ -15,7 +15,7 @@ public class MainTest {
                 new File("src/test/resources/import_example/model_calculator.glsl"),
                 new File("src/test/resources/import_example/math.glsl")
             );
-            final var OBFUSCATED_CODE = GlslTask.obfuscateProject(COLLECTION);
+            final var OBFUSCATED_CODE = GlslTask.obfuscateProject(COLLECTION, true);
     
             System.out.println("Obfuscated code for multiple-files:");
             for (var entry : OBFUSCATED_CODE.entrySet()) {
@@ -26,7 +26,7 @@ public class MainTest {
         }
 
         {
-            final String OBFUSCATED_CODE = GlslTask.obfuscate(new File("src/test/resources/example_shader.frag"));
+            final String OBFUSCATED_CODE = GlslTask.obfuscate(new File("src/test/resources/example_shader.frag"), true);
             System.out.println("Obfuscated code for single-file:");
             System.out.println(OBFUSCATED_CODE);
         }
