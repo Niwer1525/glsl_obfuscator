@@ -28,6 +28,9 @@ jobs:
       - name: Run Tests (JUnit)
         run: ./gradlew test
 
+      - name: Build JARs
+        run: ./gradlew assemble sourcesJar -PreleaseVersion=${GITHUB_REF_NAME#v}
+
       - name: Prepare Fixed Name JARs
         run: |
           mkdir -p release-artifacts
