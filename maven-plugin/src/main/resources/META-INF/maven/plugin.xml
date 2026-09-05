@@ -1,7 +1,7 @@
 <plugin>
     <name>GLSL Obfuscator Maven Plugin</name>
     <description>Obfuscates GLSL shader files during the Maven resource-processing phase.</description>
-    <groupId>com.niwer</groupId>
+    <groupId>com.github.Niwer1525.glsl_obfuscator</groupId>
     <artifactId>glsl-obfuscator-maven-plugin</artifactId>
     <version>${projectVersion}</version>
     <goalPrefix>glsl</goalPrefix>
