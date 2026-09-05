@@ -2,7 +2,7 @@ plugins {
     id 'maven-publish'
 }
 
-def releaseVersion = findProperty('releaseVersion') ?: '1.0.0'
+def releaseVersion = findProperty('releaseVersion') ?: System.getenv('VERSION') ?: '1.0.0'
 
 subprojects {
     apply plugin: 'java-library'
