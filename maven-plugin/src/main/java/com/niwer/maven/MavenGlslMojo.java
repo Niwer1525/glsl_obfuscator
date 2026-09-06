@@ -45,6 +45,12 @@ public class MavenGlslMojo extends AbstractMojo {
     private boolean minify;
 
     /**
+     * Set to true to obfuscate function and variable names separately, or false to treat them together.
+     */
+    @Parameter(property = "glsl.separateFuncsAndVars", defaultValue = "false")
+    private boolean separateFuncsAndVars = false;
+
+    /**
      * List of symbols that should not be obfuscated.
      */
     @Parameter(property = "glsl.excludedSymbols")
@@ -86,7 +92,7 @@ public class MavenGlslMojo extends AbstractMojo {
             /* Process all files together (linked for #import or #include) */
             getLog().info("Obfuscating " + shaderFiles.size() + " GLSL files with linked symbols...");
             try {
-                final Map<File, String> RESULTS = GlslObfuscator.obfuscateProject(shaderFiles, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of());
+                final Map<File, String> RESULTS = GlslObfuscator.obfuscateProject(shaderFiles, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of(), separateFuncsAndVars);
                 for (Map.Entry<File, String> entry : RESULTS.entrySet()) Files.writeString(entry.getKey().toPath(), entry.getValue());
             } catch (Exception e) {
                 throw new MojoExecutionException("Error during multi-file GLSL obfuscation", e);
@@ -96,7 +102,7 @@ public class MavenGlslMojo extends AbstractMojo {
             for (final File FILE : shaderFiles) {
                 try {
                     getLog().info("Obfuscating GLSL file: " + FILE.getAbsolutePath());
-                    String obfuscated = GlslObfuscator.obfuscate(FILE, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of());
+                    String obfuscated = GlslObfuscator.obfuscate(FILE, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of(), separateFuncsAndVars);
                     Files.writeString(FILE.toPath(), obfuscated);
                 } catch (Exception e) {
                     getLog().error("Error processing file " + FILE.getAbsolutePath(), e);

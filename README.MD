@@ -90,6 +90,7 @@ obfuscateGlsl {
     source = 'src/main/resources/assets/shaders'
     linked = true // Enable multi-file obfuscation for projects with #import, #include or #moj_import directives
     minify = true // Set to false to keep formatting
+    separateFuncsAndVars = true // Set to true to obfuscate function and variable names separately
     excludedSymbols = ['func123', 'mySpecialVar', 'matrixCalculator'] // Symbols that should not be obfuscated
     excludedFiles = ['**/ignored_shader.glsl', '**/debug/**'] // Files that should not be obfuscated
 }
@@ -125,6 +126,7 @@ The obfuscation task automatically hooks into processResources, and can also be 
         <sourceDir>${project.build.outputDirectory}</sourceDir>
         <linked>true</linked> <!-- Enable multi-file obfuscation for projects with #import, #include or #moj_import directives -->
         <minify>true</minify> <!-- Set to false to keep formatting -->
+        <separateFuncsAndVars>true</separateFuncsAndVars> <!-- Set to true to obfuscate function and variable names separately -->
         <!-- List of symbols that should not be obfuscated -->
         <excludedSymbols>
             <symbol>func123</symbol>

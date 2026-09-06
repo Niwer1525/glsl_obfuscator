@@ -55,7 +55,7 @@ public class GradleGlslObfuscatorPlugin implements Plugin<Project> {
         if (extension.isLinked()) {
             /* Process all files together (linked for #import or #include) */
             Utils.print("Obfuscating " + FILES_LIST.size() + " GLSL files with linked symbols...");
-            Map<File, String> obfuscatedResults = GlslObfuscator.obfuscateProject(FILES_LIST, extension.shouldMinify(), extension.getExcludedSymbols() != null ? Set.copyOf(extension.getExcludedSymbols()) : Set.of());
+            Map<File, String> obfuscatedResults = GlslObfuscator.obfuscateProject(FILES_LIST, extension.shouldMinify(), extension.getExcludedSymbols() != null ? Set.copyOf(extension.getExcludedSymbols()) : Set.of(), extension.shouldSeparateFuncsAndVars());
             obfuscatedResults.forEach((file, content) -> {
                 try {
                     Files.writeString(file.toPath(), content);
@@ -68,7 +68,7 @@ public class GradleGlslObfuscatorPlugin implements Plugin<Project> {
             for (File file : FILES_LIST) {
                 try {
                     Utils.print("Minifying GLSL file: " + file.getAbsolutePath());
-                    Files.writeString(file.toPath(), GlslObfuscator.obfuscate(file, extension.shouldMinify(), extension.getExcludedSymbols() != null ? Set.copyOf(extension.getExcludedSymbols()) : Set.of()));
+                    Files.writeString(file.toPath(), GlslObfuscator.obfuscate(file, extension.shouldMinify(), extension.getExcludedSymbols() != null ? Set.copyOf(extension.getExcludedSymbols()) : Set.of(), extension.shouldSeparateFuncsAndVars()));
                 } catch (Exception e) {
                     throw new RuntimeException("Error processing GLSL file: " + file.getAbsolutePath(), e);
                 }

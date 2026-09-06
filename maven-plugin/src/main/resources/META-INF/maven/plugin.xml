@@ -46,6 +46,13 @@
                     <description>Whether to minify the output code.</description>
                 </parameter>
                 <parameter>
+                    <name>separateFuncsAndVars</name>
+                    <type>boolean</type>
+                    <required>false</required>
+                    <editable>true</editable>
+                    <description>Whether to obfuscate function and variable names separately.</description>
+                </parameter>
+                <parameter>
                     <name>excludedSymbols</name>
                     <type>java.util.List</type>
                     <required>false</required>

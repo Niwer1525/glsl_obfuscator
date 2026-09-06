@@ -7,6 +7,7 @@ public class GradleGlslObfuscatorExtension {
     private String source = "build";
     private boolean linked = true; // true = share symbols (#import or #include), false = file by file
     private boolean minify = true; // true = minify GLSL, false = only obfuscate
+    private boolean separateFuncsAndVars = false; // true = obfuscate functions and variables separately, false = obfuscate them together
     private List<String> excludedSymbols = new ArrayList<>(); // List of symbols to exclude from obfuscation
     private List<String> excludedFiles = new ArrayList<>(); // List of files to exclude from obfuscation
 
@@ -24,6 +25,14 @@ public class GradleGlslObfuscatorExtension {
 
     public void setLinked(boolean linked) {
         this.linked = linked;
+    }
+
+    public boolean shouldSeparateFuncsAndVars() {
+        return separateFuncsAndVars;
+    }
+
+    public void setSeparateFuncsAndVars(boolean separateFuncsAndVars) {
+        this.separateFuncsAndVars = separateFuncsAndVars;
     }
 
     public boolean shouldMinify() {

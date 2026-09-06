@@ -18,14 +18,15 @@ public class ObfuscatorEngine {
      * @param lines The GLSL shader code to obfuscate as a list of lines.
      * @param shouldMinify If true, the shader code will be minified before obfuscation.
      * @param initialExcludedSymbols A set of symbols to exclude from obfuscation (Generally provided by the user trough a plugin configuration).
+     * @param separateFuncsAndVars If true, function and variable names will be obfuscated separately.
      * @return The obfuscated GLSL shader code as a string.
      */
-    public static String obfuscateSingle(List<String> lines, boolean shouldMinify, Set<String> initialExcludedSymbols) {
+    public static String obfuscateSingle(List<String> lines, boolean shouldMinify, Set<String> initialExcludedSymbols, boolean separateFuncsAndVars) {
         if (lines == null) throw new RuntimeException("Lines is null");
         if (lines.isEmpty()) return "";
         if (initialExcludedSymbols == null) throw new RuntimeException("Initial excluded symbols is null");
 
-        final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols);
+        final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols, separateFuncsAndVars);
         collectSymbols(lines, CONTEXT);
         
         final List<String> CLEANED = Utils.getLines(clearComments(lines, shouldMinify));
@@ -91,16 +92,68 @@ public class ObfuscatorEngine {
             while (declMatcher.find()) {
                 String declarations = declMatcher.group(1);
 
-                /* Handle multiple declarations or assignments: e.g., "a = 5.0, b, c" */
-                for (String part : declarations.split(",")) {
-                    if (part.contains("=")) part = part.substring(0, part.indexOf('=')); // Keep only the variable name before the assignment                    
-                    if (part.contains("(")) part = part.substring(0, part.indexOf('(')); // Keep only the function name before the parenthesis
+                /* If the declaration contains a function, register it */
+                Matcher funcMatcher = Pattern.compile("^([a-zA-Z_]\\w*)\\s*\\(").matcher(declarations);
+                if (funcMatcher.find()) {
+                    String funcName = funcMatcher.group(1);
+                    context.registerFunction(funcName);
 
+                    /* If the line contains parameters (e.g., void foo(int a, float b)) */
+                    int startParen = declarations.indexOf('(');
+                    int endParen = declarations.lastIndexOf(')');
+                    if (startParen != -1 && endParen > startParen) {
+                        String params = declarations.substring(startParen + 1, endParen);
+                        for (String param : splitTopLevelCommas(params)) {
+                            // Ignore les qualificateurs comme 'inout', 'out', 'const'
+                            String varName = cleanIdentifier(param);
+                            if (!varName.isEmpty()) context.registerVariable(varName);
+                        }
+                    }
+                    continue;
+                }
+
+                /* Parse variable declarations */
+                for (String part : splitTopLevelCommas(declarations)) {
+                    if (part.contains("=")) part = part.substring(0, part.indexOf('='));
                     String name = cleanIdentifier(part);
-                    if (!name.isEmpty()) context.registerSymbol(name);
+                    if (!name.isEmpty()) context.registerVariable(name);
                 }
             }
         }
+    }
+
+    /**
+     * Split a string on top-level commas (not enclosed in parentheses, brackets, or braces).
+     * This is useful for parsing GLSL declarations where commas may appear inside constructors or function calls
+     * 
+     * @param input
+     * @return
+     */
+    protected static List<String> splitTopLevelCommas(String input) {
+        if (input == null || input.isBlank()) return List.of();
+
+        List<String> tokens = new java.util.ArrayList<>();
+        int depth = 0;
+        StringBuilder current = new StringBuilder();
+
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+
+            if (c == '(' || c == '[' || c == '{') depth++;
+            else if (c == ')' || c == ']' || c == '}') depth = Math.max(0, depth - 1);
+
+            /* We only split on commas that are not enclosed in any containers */
+            if (c == ',' && depth == 0) {
+                String token = current.toString().trim();
+                if (!token.isEmpty()) tokens.add(token);
+                current.setLength(0);
+            } else current.append(c);
+        }
+
+        String lastToken = current.toString().trim();
+        if (!lastToken.isEmpty()) tokens.add(lastToken);
+
+        return tokens;
     }
 
     protected static String applyObfuscation(List<String> lines, ObfuscationContext context, boolean shouldMinify) {

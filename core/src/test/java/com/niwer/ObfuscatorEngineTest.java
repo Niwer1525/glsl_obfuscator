@@ -12,9 +12,11 @@ class ObfuscatorEngineTest {
 
     @Test
     public void testObfuscateSingleWithNullValues() {
-        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(null, true, Set.of()));
-        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(List.of("test"), true, null));
+        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(null, true, Set.of(), false));
+        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(List.of("test"), true, null, false));
         
-        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of()));
+        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), false));
+        
+        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), true));
     }
 }
