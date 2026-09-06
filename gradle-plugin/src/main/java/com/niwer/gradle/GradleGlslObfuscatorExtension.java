@@ -36,12 +36,20 @@ public class GradleGlslObfuscatorExtension {
         this.seed = seed;
     }
 
+    public boolean isSeparateFuncsAndVars() {
+        return separateFuncsAndVars;
+    }
+
     public boolean shouldSeparateFuncsAndVars() {
         return separateFuncsAndVars;
     }
 
     public void setSeparateFuncsAndVars(boolean separateFuncsAndVars) {
         this.separateFuncsAndVars = separateFuncsAndVars;
+    }
+
+    public boolean isMinify() {
+        return minify;
     }
 
     public boolean shouldMinify() {
