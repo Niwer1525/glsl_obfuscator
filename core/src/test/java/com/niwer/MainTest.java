@@ -24,13 +24,23 @@ public class MainTest {
                 System.out.println(entry.getValue());
                 System.out.println();
             }
+            System.out.println();
         }
 
         {
             /* Obfuscate a single shader file */
-            final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(new File("core/src/test/resources/example_shader.frag"), false, false, 255L);
+            final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(new File("core/src/test/resources/example_shader.frag"), true, false, 255L);
             System.out.println("Obfuscated code for single-file:");
             System.out.println(OBFUSCATED_CODE);
+            System.out.println();
+        }
+
+        {
+            /* Obfuscate a single shader file (Multi-line Macro test) */
+            final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(new File("core/src/test/resources/multi_lines_macro.frag"), true, false, 255L);
+            System.out.println("Obfuscated code for single-file:");
+            System.out.println(OBFUSCATED_CODE);
+            System.out.println();
         }
     }
 }

@@ -172,12 +172,12 @@ import java.util.List;
 import java.util.Map;
 
 // Single file obfuscation & minification
-String singleResult = GlslTask.obfuscate(new File("path/to/shader.fsh"), true);
+String singleResult = GlslTask.obfuscate(new File("path/to/shader.fsh"), true, true, 12345L);
 
 // Multi-file obfuscation & minification with synchronized symbol maps
 Map<File, String> projectResults = GlslTask.obfuscateProject(List.of(
     new File("shaders/main.fsh"),
     new File("shaders/math.glsl"),
     new File("shaders/model_calculator.glsl")
-), true);
+), true, true, 12345L);
 ```

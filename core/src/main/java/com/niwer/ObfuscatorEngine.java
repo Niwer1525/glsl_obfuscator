@@ -108,7 +108,7 @@ public class ObfuscatorEngine {
                     if (startParen != -1 && endParen > startParen) {
                         String params = declarations.substring(startParen + 1, endParen);
                         for (String param : splitTopLevelCommas(params)) {
-                            // Ignore les qualificateurs comme 'inout', 'out', 'const'
+                            // Ignore parameter types and qualifiers, just extract the variable name
                             String varName = cleanIdentifier(param);
                             if (!varName.isEmpty()) context.registerVariable(varName);
                         }
@@ -164,22 +164,58 @@ public class ObfuscatorEngine {
         StringBuilder result = new StringBuilder();
         Map<String, String> symbols = context.getSymbolMap();
         Set<String> blacklist = context.getBlacklistedSymbols();
-        Pattern wordPattern = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b"); // Capture valid identifiers (starting with a letter or underscore, followed by letters, digits, or underscores)
+        Pattern wordPattern = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b");
+
+        boolean inDirective = false;
 
         for (String line : lines) {
             String trimmed = line.trim();
             if (trimmed.isEmpty()) {
-                if (!shouldMinify) result.append("\n"); // Preserve empty lines for formatting if not minifying
+                if (!shouldMinify) result.append("\n");
                 continue;
             }
 
-            /* Keep preprocessor directives intact (e.g., #import, #version, etc.) */
-            if (trimmed.startsWith("#")) {
-                result.append(shouldMinify ? trimmed : line).append("\n");
+            boolean isDirectiveStart = trimmed.startsWith("#");
+
+            if (inDirective || isDirectiveStart) {
+                inDirective = trimmed.endsWith("\\");
+
+                // If you want to obfuscate identifiers inside the macro body:
+                String lineToProcess = shouldMinify ? trimmed : line;
+                
+                // If it's the "#define NAME" declaration line, keep the directive name intact
+                // or pass through your standard regex:
+                Matcher matcher = wordPattern.matcher(lineToProcess);
+                StringBuilder rewrittenLine = new StringBuilder();
+
+                while (matcher.find()) {
+                    String word = matcher.group(1);
+                    int start = matcher.start();
+
+                    boolean isPropertyAccess = false;
+                    if (start > 0) {
+                        char prevChar = lineToProcess.charAt(start - 1);
+                        if (prevChar == '.') isPropertyAccess = true;
+                        else if (prevChar == ' ' || prevChar == '\t') {
+                            int p = start - 1;
+                            while (p >= 0 && Character.isWhitespace(lineToProcess.charAt(p))) p--;
+                            if (p >= 0 && lineToProcess.charAt(p) == '.') isPropertyAccess = true;
+                        }
+                    }
+
+                    if (!isPropertyAccess && symbols.containsKey(word) && !blacklist.contains(word)) {
+                        matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(symbols.get(word)));
+                    } else {
+                        matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(word));
+                    }
+                }
+                matcher.appendTail(rewrittenLine);
+                result.append(rewrittenLine).append("\n");
                 continue;
             }
 
-            String lineToProcess = shouldMinify ? trimmed : line; // Use trimmed line for minification, original line for formatting
+            // Normal line handling
+            String lineToProcess = shouldMinify ? trimmed : line;
             Matcher matcher = wordPattern.matcher(lineToProcess);
             StringBuilder rewrittenLine = new StringBuilder();
 
@@ -187,7 +223,6 @@ public class ObfuscatorEngine {
                 String word = matcher.group(1);
                 int start = matcher.start();
 
-                /* Check if the word is a property access (e.g., "obj.prop" or "obj['prop']") */
                 boolean isPropertyAccess = false;
                 if (start > 0) {
                     char prevChar = lineToProcess.charAt(start - 1);
@@ -199,9 +234,11 @@ public class ObfuscatorEngine {
                     }
                 }
 
-                /* Replacement if: it's not a property, it's in our table and not blacklisted */
-                if (!isPropertyAccess && symbols.containsKey(word) && !blacklist.contains(word)) matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(symbols.get(word)));
-                else matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(word));
+                if (!isPropertyAccess && symbols.containsKey(word) && !blacklist.contains(word)) {
+                    matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(symbols.get(word)));
+                } else {
+                    matcher.appendReplacement(rewrittenLine, Matcher.quoteReplacement(word));
+                }
             }
             matcher.appendTail(rewrittenLine);
             result.append(rewrittenLine).append("\n");
@@ -221,17 +258,32 @@ public class ObfuscatorEngine {
 
     private static String removeNewLines(List<String> lines) {
         final StringBuilder code = new StringBuilder();
-        for (String line : lines) {
-            line = line.trim();
+        boolean inDirective = false;
 
-            if (line.startsWith("#")) { // Keep preprocessor directives on their own line
-                if (code.length() > 0 && code.charAt(code.length() - 1) != '\n') code.append('\n');
-                code.append(line).append("\n");
+        for (String line : lines) {
+            /* Strip leading & trailing whitespace */
+            line = line.strip();
+            if (line.isEmpty()) continue;
+
+            boolean isDirectiveStart = line.startsWith("#");
+
+            if (isDirectiveStart || inDirective) {
+                /* If starting a fresh directive, ensure it starts on a new line */
+                if (isDirectiveStart && code.length() > 0 && code.charAt(code.length() - 1) != '\n') code.append('\n');
+
+                /* Check if this line ends with a continuation backslash */
+                boolean continues = line.endsWith("\\");
+                if (continues) line = line.substring(0, line.length() - 1).stripTrailing(); // Strip the trailing '\' and any whitespace before it
+
+                if (!line.isEmpty()) code.append(line).append(' ');
+
+                inDirective = continues;
                 continue;
             }
 
-            if (!line.isEmpty()) code.append(line).append(" ");
+            code.append(line).append(' '); // Standard non-preprocessor code line
         }
+
         return code.toString().trim();
     }
 }

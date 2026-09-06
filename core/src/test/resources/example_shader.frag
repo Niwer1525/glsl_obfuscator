@@ -14,6 +14,15 @@ float random(vec2 st) {
     return fract(sin(dot(st, vec2(12.9898, 78.233))) * 23758.5453123); // 23758
 }
 
+#define THIS_IS_A_MULTILINE_MACRO(pos, size) \
+{ \
+    int i = size.y; \
+    \
+    int j = pos.x; \
+    \
+    vec4 color = vec4(i / size.y, j / size.x, 0.0, 1.0); \
+}
+
 void main() {
     vec2 texCoord = gl_FragCoord.xy/uResolution;
     vec4 sceneColor = texture2D(uScene, texCoord);
