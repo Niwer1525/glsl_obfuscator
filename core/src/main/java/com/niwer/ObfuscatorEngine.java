@@ -47,7 +47,10 @@ public class ObfuscatorEngine {
         for (String line : rawCode.split("\n")) {
             /* Delete single-line comments */
             int lineCommentIdx = line.indexOf("//");
-            if (lineCommentIdx != -1) line = line.substring(0, lineCommentIdx).trim();
+            if (lineCommentIdx != -1) {
+                line = line.substring(0, lineCommentIdx);
+                if (line.isEmpty()) continue; // Skip empty lines after comment removal
+            }
 
             if(shouldMinify) {
                 line = line.trim().replaceAll("\\s+", " ");
