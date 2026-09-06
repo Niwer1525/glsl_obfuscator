@@ -1,8 +1,10 @@
-package com.niwer;
+package com.niwer.utils;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Utils {
 
@@ -37,4 +39,17 @@ public class Utils {
      * @param o The object to print.
      */
     public static void print(Object o) { System.out.println(o); }
+
+    /**
+     * Merge two sets into a new set containing all unique elements from both.
+     * 
+     * @param a The first set to merge.
+     * @param b The second set to merge.
+     * @return A new set containing all unique elements from both input sets.
+     */
+    public static Set<String> mergeSets(Set<String> a, Set<String> b) {
+        Set<String> merged = new HashSet<>(a);
+        merged.addAll(b);
+        return merged;
+    }
 }

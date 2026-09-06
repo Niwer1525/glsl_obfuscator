@@ -1,37 +1,72 @@
 package com.niwer;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import com.niwer.utils.PatternUtils;
+import com.niwer.utils.Utils;
 
 public class GlslVariables {
 
     private GlslVariables() {}
 
-    public static final String PREPROCESSOR_DIRECTIVE_REGEX = "^\\s*#\\s*\\w+.*$";
-
-    public static final Pattern IO_PATTERN = Pattern.compile(
-        "\\b(?:uniform|attribute|varying|in|out|layout\\s*\\([^)]*\\)\\s*(?:in|out)?)\\s+(?:\\w+\\s+)*(\\w+)\\s+([\\w\\s,\\[\\]]+);"
-    ); // This regex captures uniforms, attributes, varyings, in, out (including optional qualifiers like 'flat', 'smooth', 'centroid')
-
-    public static final Pattern DECLARATION_PATTERN = Pattern.compile(
-        "\\b(?:void|int|uint|bool|float|double|vec[234]|u?ivec[234]|bvec[234]|dvec[234]|mat[234](?:x[234])?|sampler[123]D|samplerCube)\\s+([\\w\\s,\\[\\]=().+/*-]+?)(?=[;{])"
-    ); // This regex captures variable declarations, including multiple declarations in a single line (e.g., "float a, b = 1.0, c[2];")
-
     public static final Pattern KEEP_DIRECTIVE_PATTERN = Pattern.compile(
         "(?://|/\\*)\\s*@keep\\s+([\\w\\s,]+)"
     ); // This regex captures the @keep directive in comments, allowing multiple symbols to be specified (e.g., "// @keep a, b, c")
 
-    public static final Set<String> GLSL_KEYWORDS = Set.of(
-        "attribute", "const", "uniform", "varying", "break", "continue",
-        "do", "else", "for", "if", "discard", "return", "switch",
-        "case", "default", "in", "out", "inout", "float", "int",
-        "void", "bool", "true", "false", "mat2", "mat3",
-        "mat4", "vec2", "vec3", "vec4", "while",
-        "sampler2D", "samplerCube", "main",
-        "gl_FragColor", "gl_FragCoord", "gl_Position", "gl_VertexID",
-        "texture2D", "textureCube",
-        "dot", "mix", "clamp", "fract", "sin", "cos"
+    private static final Set<String> PRECISION_QUALIFIERS = Set.of("lowp", "mediump", "highp", "precision"); // Precision qualifiers.
+    private static final Set<String> STORAGE_QUALIFIERS = Set.of(
+        "attribute", "const", "uniform", "varying",
+        "in", "out", "inout",
+        "centroid", "flat", "smooth", "noperspective", "invariant"
     );
+    private static final Set<String> BASIC_TYPES = Set.of("void", "bool", "int", "uint", "float", "double"); // Basic types and scalars.
+
+    /* Complex types and samplers */
+    private static final Set<String> AGGREGATE_TYPES = Set.of(
+        "vec2", "vec3", "vec4",
+        "bvec2", "bvec3", "bvec4",
+        "ivec2", "ivec3", "ivec4",
+        "uvec2", "uvec3", "uvec4",
+        "dvec2", "dvec3", "dvec4",
+        "mat2", "mat3", "mat4",
+        "mat2x2", "mat2x3", "mat2x4",
+        "mat3x2", "mat3x3", "mat3x4",
+        "mat4x2", "mat4x3", "mat4x4",
+        "sampler1D", "sampler2D", "sampler3D", "samplerCube",
+        "sampler1DShadow", "sampler2DShadow", "samplerCubeShadow"
+    );
+
+    private static final Set<String> TYPE_PATTERNS_FOR_REGEX = Utils.mergeSets(BASIC_TYPES, Set.of(
+        "vec[234]", "u?ivec[234]", "bvec[234]", "dvec[234]",
+        "mat[234](?:x[234])?",
+        "sampler[123]D(?:Shadow)?", "samplerCube(?:Shadow)?"
+    ));
+
+    /*  keywords & control flow */
+    private static final Set<String> CONTROL_KEYWORDS = Set.of(
+        "break", "continue", "do", "else", "for", "if", "discard",
+        "return", "switch", "case", "default", "while", "true", "false"
+    );
+
+    /* built-in functions */
+    private static final Set<String> BUILTIN_IDENTIFIERS = Set.of(
+        "main",
+        "gl_FragColor", "gl_FragCoord", "gl_Position", "gl_VertexID", "gl_InstanceID",
+        "gl_FragDepth", "gl_PointSize",
+        "texture2D", "textureCube", "texture",
+        "dot", "mix", "clamp", "fract", "sin", "cos", "tan", "asin", "acos", "atan",
+        "pow", "exp", "log", "exp2", "log2", "sqrt", "inversesqrt",
+        "abs", "sign", "floor", "ceil", "min", "max", "step", "smoothstep",
+        "length", "distance", "cross", "normalize", "reflect", "refract"
+    );
+    
+    public static final Pattern IO_PATTERN = PatternUtils.buildIoPattern(STORAGE_QUALIFIERS);
+    public static final Pattern DECLARATION_PATTERN = PatternUtils.buildDeclarationPattern(Utils.mergeSets(PRECISION_QUALIFIERS, Set.of("const")), TYPE_PATTERNS_FOR_REGEX);
+    
+    public static final Set<String> GLSL_KEYWORDS = buildUnifiedKeywords();
 
     public static final Set<String> GLSL_SWIZZLES = Set.of("x", "y", "z", "w", "r", "g", "b", "a", "xy", "xz", "yz", "rgb", "rgba", "st", "stp");
     
@@ -74,5 +109,16 @@ public class GlslVariables {
      */
     public static boolean isReserved(String word) {
         return isKeyword(word) || isSwizzle(word) || isBuiltinProperty(word);
+    }
+
+    private static Set<String> buildUnifiedKeywords() {
+        Set<String> keywords = new HashSet<>();
+        keywords.addAll(PRECISION_QUALIFIERS);
+        keywords.addAll(STORAGE_QUALIFIERS);
+        keywords.addAll(BASIC_TYPES);
+        keywords.addAll(AGGREGATE_TYPES);
+        keywords.addAll(CONTROL_KEYWORDS);
+        keywords.addAll(BUILTIN_IDENTIFIERS);
+        return Collections.unmodifiableSet(keywords);
     }
 }

@@ -12,23 +12,25 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-class GlslTaskTest {
+import com.niwer.utils.Utils;
+
+class GlslObfuscatorTest {
 
     public static void main(String[] args) {
-        final String OBFUSCATED_CODE = GlslTask.obfuscate(ExampleShader.TEST_SHADER, true);
+        final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(ExampleShader.TEST_SHADER, true);
         Utils.print(OBFUSCATED_CODE);
     }
 
     @Test void testObfuscateFromString() {
-        final String OBFUSCATED_CODE = GlslTask.obfuscate(ExampleShader.TEST_SHADER, true);
+        final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(ExampleShader.TEST_SHADER, true);
         assertNotNull(OBFUSCATED_CODE);
 
-        final String OBFUSCATED_CODE_NON_MINIFIED = GlslTask.obfuscate(ExampleShader.TEST_SHADER, false);
+        final String OBFUSCATED_CODE_NON_MINIFIED = GlslObfuscator.obfuscate(ExampleShader.TEST_SHADER, false);
         assertNotNull(OBFUSCATED_CODE_NON_MINIFIED);
     }
 
     @Test void testObfuscateWithInitialExcludedSymbolsNull() {
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscate(ExampleShader.TEST_SHADER, true, null));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscate(ExampleShader.TEST_SHADER, true, null));
         
         final List<File> COLLECTION = new ArrayList<File>();
         Collections.addAll(COLLECTION,
@@ -36,22 +38,22 @@ class GlslTaskTest {
             new File("src/test/resources/import_example/model_calculator.glsl"),
             new File("src/test/resources/import_example/math.glsl")
         );
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscateProject(COLLECTION, true, null));
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscateProject(null, true));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscateProject(COLLECTION, true, null));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscateProject(null, true));
     }
 
     @Test void testObfuscateFromNonExistingString() {
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscate((String)null, true));
-        assertEquals("", GlslTask.obfuscate("", true));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscate((String)null, true));
+        assertEquals("", GlslObfuscator.obfuscate("", true));
     }
 
     @Test void testObfuscateFromNonExistingFile() {
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscate((File)null, true));
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscate(new File("non_existing_file.glsl"), true));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscate((File)null, true));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscate(new File("non_existing_file.glsl"), true));
     }
 
     @Test void testObfuscateFromFile() {
-        final String OBFUSCATED_CODE = GlslTask.obfuscate(new File("src/test/resources/example_shader.frag"), true);
+        final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(new File("src/test/resources/example_shader.frag"), true);
         assertNotNull(OBFUSCATED_CODE);
     }
 
@@ -62,20 +64,20 @@ class GlslTaskTest {
             new File("src/test/resources/import_example/model_calculator.glsl"),
             new File("src/test/resources/import_example/math.glsl")
         );
-        final var OBFUSCATED_CODE = GlslTask.obfuscateProject(COLLECTION, true);
+        final var OBFUSCATED_CODE = GlslObfuscator.obfuscateProject(COLLECTION, true);
         assertNotNull(OBFUSCATED_CODE);
 
-        final var OBFUSCATED_CODE_NON_MINIFIED = GlslTask.obfuscateProject(COLLECTION, false);
+        final var OBFUSCATED_CODE_NON_MINIFIED = GlslObfuscator.obfuscateProject(COLLECTION, false);
         assertNotNull(OBFUSCATED_CODE_NON_MINIFIED);
     }
 
     @Test void testObfuscateFromFilesWithNullAndEmpty() {
-        assertDoesNotThrow(() -> GlslTask.obfuscateProject(Collections.emptyList(), true));
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscateProject(null, true));
+        assertDoesNotThrow(() -> GlslObfuscator.obfuscateProject(Collections.emptyList(), true));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscateProject(null, true));
     }
 
     @Test void testObfuscateFromNonExistingLines() {
-        assertThrows(RuntimeException.class, () -> GlslTask.obfuscate((List<String>)null, true));
-        assertEquals("", GlslTask.obfuscate(Collections.emptyList(), true));
+        assertThrows(RuntimeException.class, () -> GlslObfuscator.obfuscate((List<String>)null, true));
+        assertEquals("", GlslObfuscator.obfuscate(Collections.emptyList(), true));
     }
 }

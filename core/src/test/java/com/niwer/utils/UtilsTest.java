@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.utils;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -45,5 +46,13 @@ class UtilsTest {
 
     @Test void testGetLinesFromNullFile() {
         assertThrows(RuntimeException.class, () -> Utils.getLines((java.io.File)null));
+    }
+
+    @Test void testMergeSets() {
+        var setA = Set.of("a", "b", "c");
+        var setB = Set.of("b", "c", "d", "e");
+        var mergedSet = Utils.mergeSets(setA, setB);
+        assertEquals(5, mergedSet.size());
+        assertTrue(mergedSet.containsAll(List.of("a", "b", "c", "d", "e")));
     }
 }

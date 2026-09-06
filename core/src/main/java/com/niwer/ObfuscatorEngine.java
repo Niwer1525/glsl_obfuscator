@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.niwer.utils.Utils;
+
 public class ObfuscatorEngine {
 
     private ObfuscatorEngine() {}
@@ -26,12 +28,12 @@ public class ObfuscatorEngine {
         final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols);
         collectSymbols(lines, CONTEXT);
         
-        final List<String> CLEANED = Utils.getLines(clearComments(lines));
-        final String OBFUSCATED = applyObfuscation(CLEANED, CONTEXT);
+        final List<String> CLEANED = Utils.getLines(clearComments(lines, shouldMinify));
+        final String OBFUSCATED = applyObfuscation(CLEANED, CONTEXT, shouldMinify);
         return shouldMinify ? removeNewLines(OBFUSCATED) : OBFUSCATED;
     }
 
-    protected static String clearComments(List<String> lines) {
+    protected static String clearComments(List<String> lines, boolean shouldMinify) {
         // Join lines into a single string to handle multi-line comments and then process line by line
         String rawCode = String.join("\n", lines);
 
@@ -39,20 +41,21 @@ public class ObfuscatorEngine {
         rawCode = rawCode.replaceAll("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", " ");
 
         // Delete single-line comments // ... & trim each line
-        StringBuilder minified = new StringBuilder();
+        StringBuilder result = new StringBuilder();
         for (String line : rawCode.split("\n")) {
-            line = line.trim();
-
             /* Delete single-line comments */
             int lineCommentIdx = line.indexOf("//");
             if (lineCommentIdx != -1) line = line.substring(0, lineCommentIdx).trim();
 
-            /* Remove extra whitespace and normalize spaces */
-            line = line.replaceAll("\\s+", " ");
-
-            if (!line.isEmpty()) minified.append(line).append("\n");
+            if(shouldMinify) {
+                line = line.trim().replaceAll("\\s+", " ");
+                if (!line.isEmpty()) result.append(line).append("\n");
+            } else {
+                line = line.stripTrailing(); // Remove trailing whitespace but keep leading whitespace for formatting
+                result.append(line).append("\n");
+            }
         }
-        return minified.toString();
+        return result.toString();
     }
 
     protected static void collectSymbols(List<String> lines, ObfuscationContext context) {
@@ -100,23 +103,27 @@ public class ObfuscatorEngine {
         }
     }
 
-    protected static String applyObfuscation(List<String> lines, ObfuscationContext context) {
+    protected static String applyObfuscation(List<String> lines, ObfuscationContext context, boolean shouldMinify) {
         StringBuilder result = new StringBuilder();
         Map<String, String> symbols = context.getSymbolMap();
         Set<String> blacklist = context.getBlacklistedSymbols();
         Pattern wordPattern = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b"); // Capture valid identifiers (starting with a letter or underscore, followed by letters, digits, or underscores)
 
         for (String line : lines) {
-            line = line.trim();
-            if (line.isEmpty()) continue;
-
-            /* Keep preprocessor directives intact (e.g., #import, #version, etc.) */
-            if (line.startsWith("#")) {
-                result.append(line).append("\n");
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) {
+                if (!shouldMinify) result.append("\n"); // Preserve empty lines for formatting if not minifying
                 continue;
             }
 
-            Matcher matcher = wordPattern.matcher(line);
+            /* Keep preprocessor directives intact (e.g., #import, #version, etc.) */
+            if (trimmed.startsWith("#")) {
+                result.append(shouldMinify ? trimmed : line).append("\n");
+                continue;
+            }
+
+            String lineToProcess = shouldMinify ? trimmed : line; // Use trimmed line for minification, original line for formatting
+            Matcher matcher = wordPattern.matcher(lineToProcess);
             StringBuilder rewrittenLine = new StringBuilder();
 
             while (matcher.find()) {
@@ -126,12 +133,12 @@ public class ObfuscatorEngine {
                 /* Check if the word is a property access (e.g., "obj.prop" or "obj['prop']") */
                 boolean isPropertyAccess = false;
                 if (start > 0) {
-                    char prevChar = line.charAt(start - 1);
+                    char prevChar = lineToProcess.charAt(start - 1);
                     if (prevChar == '.') isPropertyAccess = true;
                     else if (prevChar == ' ' || prevChar == '\t') {
                         int p = start - 1;
-                        while (p >= 0 && Character.isWhitespace(line.charAt(p))) p--;
-                        if (p >= 0 && line.charAt(p) == '.') isPropertyAccess = true;
+                        while (p >= 0 && Character.isWhitespace(lineToProcess.charAt(p))) p--;
+                        if (p >= 0 && lineToProcess.charAt(p) == '.') isPropertyAccess = true;
                     }
                 }
 
@@ -160,7 +167,7 @@ public class ObfuscatorEngine {
         for (String line : lines) {
             line = line.trim();
 
-            if (line.startsWith("#")) {
+            if (line.startsWith("#")) { // Keep preprocessor directives on their own line
                 if (code.length() > 0 && code.charAt(code.length() - 1) != '\n') code.append('\n');
                 code.append(line).append("\n");
                 continue;
