@@ -258,7 +258,7 @@ public class ObfuscatorEngine {
 
     private static String removeNewLines(List<String> lines) {
         final StringBuilder code = new StringBuilder();
-        boolean inDirective = false;
+        boolean inMultilineMacro = false;
 
         for (String line : lines) {
             /* Strip leading & trailing whitespace */
@@ -267,17 +267,27 @@ public class ObfuscatorEngine {
 
             boolean isDirectiveStart = line.startsWith("#");
 
-            if (isDirectiveStart || inDirective) {
-                /* If starting a fresh directive, ensure it starts on a new line */
-                if (isDirectiveStart && code.length() > 0 && code.charAt(code.length() - 1) != '\n') code.append('\n');
+            /* Start of a new preprocessor directive */
+            if (isDirectiveStart) {
+                if (code.length() > 0 && code.charAt(code.length() - 1) != '\n') code.append('\n');
 
-                /* Check if this line ends with a continuation backslash */
-                boolean continues = line.endsWith("\\");
-                if (continues) line = line.substring(0, line.length() - 1).stripTrailing(); // Strip the trailing '\' and any whitespace before it
+                // Check if this directive continues with a backslash
+                inMultilineMacro = line.endsWith("\\");
+                if (inMultilineMacro) code.append(line.substring(0, line.length() - 1).stripTrailing()).append(' '); // Strip the trailing '\' and append with space so the continuation stays on this line
+                else code.append(line).append('\n'); // Normal directive (e.g., #moj_import, #define X 1, #endif): terminate with a newline!
+                continue;
+            }
 
-                if (!line.isEmpty()) code.append(line).append(' ');
+            /* We are inside a multi-line macro continuation */
+            if (inMultilineMacro) {
+                inMultilineMacro = line.endsWith("\\");
+                if (inMultilineMacro) line = line.substring(0, line.length() - 1).stripTrailing();
 
-                inDirective = continues;
+                if (!line.isEmpty()) {
+                    code.append(line);
+                    if (inMultilineMacro) code.append(' '); // Keep continuation on the same line
+                    else code.append('\n'); // Macro has ended; terminate it with a newline!
+                } else if (!inMultilineMacro) code.append('\n');
                 continue;
             }
 
