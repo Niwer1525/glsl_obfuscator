@@ -10,6 +10,10 @@ processResources {
     }
 }
 
+tasks.named('jar', Jar) {
+    from(project(':core').sourceSets.main.output) // Create a fat jar including the core module (We can do this without using the shadow plugin since Core isn't that big)
+}
+
 publishing {
     publications {
         gpr(MavenPublication) {
