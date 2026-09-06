@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +44,9 @@ public class MavenGlslMojo extends AbstractMojo {
      */
     @Parameter(property = "glsl.minify", defaultValue = "true")
     private boolean minify;
+
+    @Parameter(property = "glsl.seed")
+    private Long seed;
 
     /**
      * Set to true to obfuscate function and variable names separately, or false to treat them together.
@@ -92,7 +96,12 @@ public class MavenGlslMojo extends AbstractMojo {
             /* Process all files together (linked for #import or #include) */
             getLog().info("Obfuscating " + shaderFiles.size() + " GLSL files with linked symbols...");
             try {
-                final Map<File, String> RESULTS = GlslObfuscator.obfuscateProject(shaderFiles, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of(), separateFuncsAndVars);
+                final Map<File, String> RESULTS = GlslObfuscator.obfuscateProject(shaderFiles,
+                    minify,
+                    excludedSymbols != null ? new TreeSet<>(excludedSymbols) : Set.of(),
+                    separateFuncsAndVars,
+                    seed
+                );
                 for (Map.Entry<File, String> entry : RESULTS.entrySet()) Files.writeString(entry.getKey().toPath(), entry.getValue());
             } catch (Exception e) {
                 throw new MojoExecutionException("Error during multi-file GLSL obfuscation", e);
@@ -102,7 +111,11 @@ public class MavenGlslMojo extends AbstractMojo {
             for (final File FILE : shaderFiles) {
                 try {
                     getLog().info("Obfuscating GLSL file: " + FILE.getAbsolutePath());
-                    String obfuscated = GlslObfuscator.obfuscate(FILE, minify, excludedSymbols != null ? Set.copyOf(excludedSymbols) : Set.of(), separateFuncsAndVars);
+                    String obfuscated = GlslObfuscator.obfuscate(FILE,
+                        minify, excludedSymbols != null ? new TreeSet<>(excludedSymbols) : Set.of(),
+                        separateFuncsAndVars,
+                        seed
+                    );
                     Files.writeString(FILE.toPath(), obfuscated);
                 } catch (Exception e) {
                     getLog().error("Error processing file " + FILE.getAbsolutePath(), e);

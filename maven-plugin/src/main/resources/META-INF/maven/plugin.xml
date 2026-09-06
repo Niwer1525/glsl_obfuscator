@@ -46,6 +46,13 @@
                     <description>Whether to minify the output code.</description>
                 </parameter>
                 <parameter>
+                    <name>seed</name>
+                    <type>java.lang.Long</type>
+                    <required>false</required>
+                    <editable>true</editable>
+                    <description>Seed value to ensure reproducible symbol generation across builds.</description>
+                </parameter>
+                <parameter>
                     <name>separateFuncsAndVars</name>
                     <type>boolean</type>
                     <required>false</required>

@@ -19,14 +19,15 @@ public class ObfuscatorEngine {
      * @param shouldMinify If true, the shader code will be minified before obfuscation.
      * @param initialExcludedSymbols A set of symbols to exclude from obfuscation (Generally provided by the user trough a plugin configuration).
      * @param separateFuncsAndVars If true, function and variable names will be obfuscated separately.
+     * @param seed The seed value to ensure reproducible symbol generation across builds.
      * @return The obfuscated GLSL shader code as a string.
      */
-    public static String obfuscateSingle(List<String> lines, boolean shouldMinify, Set<String> initialExcludedSymbols, boolean separateFuncsAndVars) {
+    public static String obfuscateSingle(List<String> lines, boolean shouldMinify, Set<String> initialExcludedSymbols, boolean separateFuncsAndVars, Long seed) {
         if (lines == null) throw new RuntimeException("Lines is null");
         if (lines.isEmpty()) return "";
         if (initialExcludedSymbols == null) throw new RuntimeException("Initial excluded symbols is null");
 
-        final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols, separateFuncsAndVars);
+        final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols, separateFuncsAndVars, seed);
         collectSymbols(lines, CONTEXT);
         
         final List<String> CLEANED = Utils.getLines(clearComments(lines, shouldMinify));

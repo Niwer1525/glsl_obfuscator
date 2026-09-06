@@ -28,7 +28,7 @@ public class MainTest {
 
         {
             /* Obfuscate a single shader file */
-            final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(new File("src/test/resources/example_shader.frag"), true, false);
+            final String OBFUSCATED_CODE = GlslObfuscator.obfuscate(new File("src/test/resources/example_shader.frag"), true, false, 255L);
             System.out.println("Obfuscated code for single-file:");
             System.out.println(OBFUSCATED_CODE);
         }

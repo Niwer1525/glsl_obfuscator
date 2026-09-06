@@ -12,11 +12,21 @@ class ObfuscatorEngineTest {
 
     @Test
     public void testObfuscateSingleWithNullValues() {
-        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(null, true, Set.of(), false));
-        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(List.of("test"), true, null, false));
+        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(null, true, Set.of(), false, null));
+        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(List.of("test"), true, null, false, null));
         
-        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), false));
+        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), false, null));
         
-        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), true));
+        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), true, null));
+    }
+
+    @Test
+    public void testObfuscateSingleWithNullValuesAndSeed() {
+        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(null, true, Set.of(), false, 255L));
+        assertThrows(RuntimeException.class, () -> ObfuscatorEngine.obfuscateSingle(List.of("test"), true, null, false, 255L));
+        
+        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), false, 255L));
+        
+        assertDoesNotThrow(() -> ObfuscatorEngine.obfuscateSingle(List.of(), true, Set.of(), true, 255L));
     }
 }
