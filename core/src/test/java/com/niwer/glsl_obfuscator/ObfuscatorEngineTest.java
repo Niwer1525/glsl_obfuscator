@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.glsl_obfuscator;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;

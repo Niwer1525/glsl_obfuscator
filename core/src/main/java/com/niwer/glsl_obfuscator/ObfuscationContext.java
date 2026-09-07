@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.glsl_obfuscator;
 
 import java.util.ArrayList;
 import java.util.Collection;

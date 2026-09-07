@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.glsl_obfuscator;
 
 import java.io.File;
 import java.util.HashMap;
@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.niwer.utils.Utils;
+import com.niwer.glsl_obfuscator.utils.Utils;
 
 public class GlslObfuscator {
 

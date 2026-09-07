@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.glsl_obfuscator;
 
 public class ContextDump {
 

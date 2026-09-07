@@ -1,4 +1,4 @@
-package com.niwer.maven;
+package com.niwer.glsl_obfuscator.maven;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-import com.niwer.GlslObfuscator;
+import com.niwer.glsl_obfuscator.GlslObfuscator;
 
 /**
  * Attaches to the "process-resources" phase of the Maven build lifecycle and obfuscates GLSL shader files.

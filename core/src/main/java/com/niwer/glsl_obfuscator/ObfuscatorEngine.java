@@ -1,4 +1,4 @@
-package com.niwer;
+package com.niwer.glsl_obfuscator;
 
 import java.util.List;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.niwer.utils.Utils;
+import com.niwer.glsl_obfuscator.utils.Utils;
 
 public class ObfuscatorEngine {
 

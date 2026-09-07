@@ -1,4 +1,4 @@
-package com.niwer.gradle;
+package com.niwer.glsl_obfuscator.gradle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

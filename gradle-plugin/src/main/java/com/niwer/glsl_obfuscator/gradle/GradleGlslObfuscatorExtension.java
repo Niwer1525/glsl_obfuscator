@@ -1,4 +1,4 @@
-package com.niwer.gradle;
+package com.niwer.glsl_obfuscator.gradle;
 
 import java.util.ArrayList;
 import java.util.List;

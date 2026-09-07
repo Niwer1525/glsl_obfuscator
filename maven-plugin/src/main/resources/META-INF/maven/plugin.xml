@@ -19,7 +19,7 @@
             <aggregator>false</aggregator>
             <requiresDirectInvocation>false</requiresDirectInvocation>
             <phase>process-resources</phase>
-            <implementation>com.niwer.maven.MavenGlslMojo</implementation>
+            <implementation>com.niwer.glsl_obfuscator.maven.MavenGlslMojo</implementation>
             <language>java</language>
             <instantiationStrategy>per-lookup</instantiationStrategy>
             <executionStrategy>once-per-session</executionStrategy>

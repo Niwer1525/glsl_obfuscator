@@ -1,4 +1,4 @@
-package com.niwer.utils;
+package com.niwer.glsl_obfuscator.utils;
 
 import java.util.Collection;
 import java.util.regex.Pattern;

@@ -1,12 +1,8 @@
-package com.niwer.gradle;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
+package com.niwer.glsl_obfuscator.gradle;
 
 import java.io.File;
 import java.nio.file.Files;
 
-import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 

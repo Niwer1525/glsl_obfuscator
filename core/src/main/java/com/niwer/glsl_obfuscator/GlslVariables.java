@@ -1,12 +1,12 @@
-package com.niwer;
+package com.niwer.glsl_obfuscator;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.niwer.utils.PatternUtils;
-import com.niwer.utils.Utils;
+import com.niwer.glsl_obfuscator.utils.PatternUtils;
+import com.niwer.glsl_obfuscator.utils.Utils;
 
 public class GlslVariables {
 
