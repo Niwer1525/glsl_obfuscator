@@ -18,11 +18,9 @@ jobs:
             target: x86_64-pc-windows-msvc
             platform: win-x64
             library: glsl_obfuscator_core.dll
-          - os: macos-13
-            target: x86_64-apple-darwin
-            platform: osx-x64
-            library: libglsl_obfuscator_core.dylib
-          - os: macos-14
+          # Build only the supported macOS ARM64 package. Cross-compile it
+          # from the available macOS runner without producing an Intel asset.
+          - os: macos-15-intel
             target: aarch64-apple-darwin
             platform: osx-arm64
             library: libglsl_obfuscator_core.dylib
