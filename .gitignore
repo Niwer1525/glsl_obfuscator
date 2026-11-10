@@ -3,3 +3,5 @@ bin
 .gradle
 .vscode
 .idea
+target/
+native/

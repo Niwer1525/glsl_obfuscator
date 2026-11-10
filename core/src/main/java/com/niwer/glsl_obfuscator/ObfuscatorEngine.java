@@ -26,13 +26,11 @@ public class ObfuscatorEngine {
         if (lines == null) throw new RuntimeException("Lines is null");
         if (lines.isEmpty()) return "";
         if (initialExcludedSymbols == null) throw new RuntimeException("Initial excluded symbols is null");
-
-        final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols, separateFuncsAndVars, seed);
-        collectSymbols(lines, CONTEXT);
-        
-        final List<String> CLEANED = Utils.getLines(clearComments(lines, shouldMinify));
-        final String OBFUSCATED = applyObfuscation(CLEANED, CONTEXT, shouldMinify);
-        return shouldMinify ? removeNewLines(OBFUSCATED) : OBFUSCATED;
+        try (RustGlslEngine engine = RustGlslEngine.create(initialExcludedSymbols, separateFuncsAndVars, seed)) {
+            final String SOURCE = String.join("\n", lines);
+            engine.collect(SOURCE);
+            return engine.transform(SOURCE, shouldMinify);
+        }
     }
 
     protected static String clearComments(List<String> lines, boolean shouldMinify) {

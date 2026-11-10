@@ -1,5 +1,7 @@
 package com.niwer.glsl_obfuscator;
 
+import com.niwer.glsl_obfuscator.utils.Utils;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -7,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.niwer.glsl_obfuscator.utils.Utils;
-
-public class GlslObfuscator {
-
+/**
+ * Public Java facade for the shared Rust obfuscation engine.
+ */
+public final class GlslObfuscator {
     private GlslObfuscator() {}
 
     /**
@@ -22,7 +24,9 @@ public class GlslObfuscator {
      * @param seed The seed value to ensure reproducible symbol generation across builds.
      * @return The obfuscated GLSL shader code as a string.
      */
-    public static String obfuscate(File file, boolean shouldMinify, boolean separateFuncsAndVars, Long seed) { return obfuscate(file, shouldMinify, Set.of(), separateFuncsAndVars, seed); }
+    public static String obfuscate(File file, boolean shouldMinify, boolean separateFuncsAndVars, Long seed) {
+        return obfuscate(file, shouldMinify, Set.of(), separateFuncsAndVars, seed);
+    }
 
     /**
      * Obfuscate a GLSL shader file by minifying its content and variable names.
@@ -39,7 +43,7 @@ public class GlslObfuscator {
         if (!file.exists()) throw new RuntimeException("File does not exist: " + file.getAbsolutePath());
         return obfuscate(Utils.getLines(file), shouldMinify, initialExcludedSymbols, separateFuncsAndVars, seed);
     }
-    
+
     /**
      * Obfuscate a GLSL shader code by minifying its content and variable names.
      * 
@@ -50,7 +54,6 @@ public class GlslObfuscator {
      * @return The obfuscated GLSL shader code as a string.
      */
     public static String obfuscate(String content, boolean shouldMinify, boolean separateFuncsAndVars, Long seed) { return obfuscate(content, shouldMinify, Set.of(), separateFuncsAndVars, seed); }
-
 
     /**
      * Obfuscate a GLSL shader code by minifying its content and variable names.
@@ -93,7 +96,11 @@ public class GlslObfuscator {
         if (content == null) throw new RuntimeException("Content is null");
         if (content.isEmpty()) return "";
         if (initialExcludedSymbols == null) throw new RuntimeException("Initial excluded symbols is null");
-        return ObfuscatorEngine.obfuscateSingle(content, shouldMinify, initialExcludedSymbols, separateFuncsAndVars, seed); 
+        try (RustGlslEngine engine = RustGlslEngine.create(initialExcludedSymbols, separateFuncsAndVars, seed)) {
+            String source = String.join("\n", content);
+            engine.collect(source);
+            return engine.transform(source, shouldMinify);
+        }
     }
 
     /**
@@ -108,7 +115,7 @@ public class GlslObfuscator {
     public static Map<File, String> obfuscateProject(List<File> shaderFiles, boolean shouldMinify, boolean separateFuncsAndVars) {
         if (shaderFiles == null) throw new RuntimeException("Shader files list is null");
         if (shaderFiles.isEmpty()) return new HashMap<>();
-        return obfuscateProject(shaderFiles, shouldMinify, separateFuncsAndVars, null);
+        return obfuscateProject(shaderFiles, shouldMinify, Set.of(), separateFuncsAndVars, null);
     }
 
     /**
@@ -142,30 +149,21 @@ public class GlslObfuscator {
         if (shaderFiles == null) throw new RuntimeException("Shader files list is null");
         if (shaderFiles.isEmpty()) return new HashMap<>();
         if (initialExcludedSymbols == null) throw new RuntimeException("Initial excluded symbols is null");
-        
-        /* Create the context and sort files */
-        final ObfuscationContext CONTEXT = new ObfuscationContext(initialExcludedSymbols, separateFuncsAndVars, seed);
-        List<File> sortedFiles = shaderFiles.stream().sorted((f1, f2) -> f1.getName().compareTo(f2.getName())).toList();
 
-        /* First clean and minify all files */
-        final Map<File, List<String>> CLEAND_FILES = new LinkedHashMap<>();
-        for (final File FILE : sortedFiles) {
-            final List<String> LINES = Utils.getLines(FILE);
-            ObfuscatorEngine.collectSymbols(LINES, CONTEXT); // Collect symbols before cleaning comments (In order to check for @keep annotations)
+        /* Create the context and sort files */    
+        List<File> sortedFiles = shaderFiles.stream().sorted((first, second) -> first.getName().compareTo(second.getName())).toList();
+        Map<File, String> sources = new LinkedHashMap<>();
+        try (RustGlslEngine engine = RustGlslEngine.create(initialExcludedSymbols, separateFuncsAndVars, seed)) {
+            for (File file : sortedFiles) {
+                if (!file.exists()) throw new RuntimeException("File does not exist: " + file.getAbsolutePath());
+                String source = String.join("\n", Utils.getLines(file));
+                engine.collect(source);
+                sources.put(file, source);
+            }
 
-            final List<String> CLEANED = Utils.getLines(ObfuscatorEngine.clearComments(LINES, shouldMinify));
-            CLEAND_FILES.put(FILE, CLEANED);
+            Map<File, String> results = new LinkedHashMap<>();
+            for (Map.Entry<File, String> entry : sources.entrySet()) results.put(entry.getKey(), engine.transform(entry.getValue(), shouldMinify));
+            return results;
         }
-
-        /* Apply the obfuscation to each file using the global symbol table */
-        final Map<File, String> RESULTS = new LinkedHashMap<>();
-        for (Map.Entry<File, List<String>> entry : CLEAND_FILES.entrySet()) {
-            final String OBFUSCATED = ObfuscatorEngine.applyObfuscation(entry.getValue(), CONTEXT, shouldMinify);
-            RESULTS.put(entry.getKey(), shouldMinify ? ObfuscatorEngine.removeNewLines(OBFUSCATED) : OBFUSCATED);
-        }
-
-        // ContextDump.dump(CONTEXT); //TODO : Add a debug option to dump the context for debugging purposes
-
-        return RESULTS;
     }
 }

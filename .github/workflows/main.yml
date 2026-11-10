@@ -6,7 +6,47 @@ on:
       - 'v*' # Triggers when receiving a tag push such as v1.0.1
 
 jobs:
+  build-native:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            platform: linux-x64
+            library: libglsl_obfuscator_core.so
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            platform: win-x64
+            library: glsl_obfuscator_core.dll
+          - os: macos-13
+            target: x86_64-apple-darwin
+            platform: osx-x64
+            library: libglsl_obfuscator_core.dylib
+          - os: macos-14
+            target: aarch64-apple-darwin
+            platform: osx-arm64
+            library: libglsl_obfuscator_core.dylib
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
+      - name: Build native Rust library
+        run: cargo build --manifest-path rust-core/Cargo.toml --release --target ${{ matrix.target }}
+      - name: Stage native library
+        shell: bash
+        run: |
+          mkdir -p "rust-core/native/${{ matrix.platform }}"
+          cp "rust-core/target/${{ matrix.target }}/release/${{ matrix.library }}" \
+            "rust-core/native/${{ matrix.platform }}/${{ matrix.library }}"
+      - name: Upload native library
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.platform }}
+          path: rust-core/native
+
   build-and-publish:
+    needs: build-native
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,6 +55,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download native libraries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: native-*
+          path: rust-core/native
+          merge-multiple: true
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -30,6 +77,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.x'
+
+      - name: Build Rust core
+        run: cargo build --manifest-path rust-core/Cargo.toml
 
       - name: Run Tests (JUnit)
         run: ./gradlew test
@@ -76,6 +126,9 @@ jobs:
           # Copy the JARs of the Maven plugin
           cp $(ls maven-plugin/build/libs/*.jar | grep -v -- '-sources\.jar$' | head -n 1) release-artifacts/glsl-obfuscator-maven-plugin.jar
           cp maven-plugin/build/libs/*-sources.jar release-artifacts/glsl-obfuscator-maven-plugin-sources.jar
+
+          # Include native Rust libraries for Java users who consume release artifacts directly
+          tar -czf release-artifacts/glsl-obfuscator-native-libraries.tar.gz -C rust-core/native .
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

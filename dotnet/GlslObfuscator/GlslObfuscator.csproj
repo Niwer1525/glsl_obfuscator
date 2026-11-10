@@ -12,5 +12,8 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="../../README.MD" Pack="true" PackagePath="README.MD" />
+    <None Include="../../rust-core/native/**/*"
+          Pack="true"
+          PackagePath="runtimes/%(RecursiveDir)native/%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

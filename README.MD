@@ -210,3 +210,19 @@ var project = GlslObfuscator.ObfuscateProject(
 `ObfuscateFile` handles a single file, while `ObfuscateProject` uses one shared
 symbol table for all files. `// @keep symbol` and `/* @keep symbol */` directives
 are supported in the same way as the Java library.
+
+### Shared Rust Core
+
+Core obfuscation logic lives in [`rust-core`](./rust-core). The Java and C# wrappers only handle API surfaces, I/O, and FFI marshaling.
+
+* **Pre-built platforms:** Linux (`x64`), Windows (`x64`), and macOS (`x64`, `arm64`).
+* **Packaging:** NuGet and Java JARs bundle all native binaries and load the matching platform library automatically.
+* **Override:** Pass `-Djna.library.path=/path/to/native/library` in Java to use a custom binary.
+
+#### Local Java Build
+
+```bash
+./gradlew clean assemble # Build and stage the native library for your current OS
+
+./gradlew cleanRustNatives # Clean Rust build artifacts and staged binaries
+```

@@ -1,3 +1,75 @@
+dependencies {
+    implementation 'net.java.dev.jna:jna:5.16.0'
+}
+
+tasks.register('buildRustCore', Exec) {
+    workingDir rootProject.file('rust-core')
+    commandLine 'cargo', 'build', '--release'
+}
+
+def rustNativePlatform = {
+    def os = System.getProperty('os.name').toLowerCase()
+    def architecture = System.getProperty('os.arch').toLowerCase()
+    def suffix = architecture.contains('aarch64') || architecture.contains('arm64') ? 'arm64' : 'x64'
+    if (os.contains('win')) return "win-${suffix}"
+    if (os.contains('mac')) return "osx-${suffix}"
+    return "linux-${suffix}"
+}
+
+def rustNativeLibrary = {
+    def os = System.getProperty('os.name').toLowerCase()
+    if (os.contains('win')) return 'glsl_obfuscator_core.dll'
+    if (os.contains('mac')) return 'libglsl_obfuscator_core.dylib'
+    return 'libglsl_obfuscator_core.so'
+}
+
+tasks.register('stageRustNative') {
+    dependsOn tasks.named('buildRustCore')
+    doLast {
+        def platform = rustNativePlatform()
+        def library = rustNativeLibrary()
+        def source = rootProject.file("rust-core/target/release/${library}")
+        def destination = rootProject.file("rust-core/native/${platform}/${library}")
+        if (!source.exists()) {
+            throw new GradleException("Rust native library was not produced: ${source}")
+        }
+        destination.parentFile.mkdirs()
+        destination.bytes = source.bytes
+    }
+}
+
+tasks.register('cleanRustNatives') {
+    doLast {
+        delete rootProject.file('rust-core/native')
+        delete rootProject.file('rust-core/target')
+    }
+}
+
+tasks.register('bundleRustNatives') {
+    dependsOn tasks.named('stageRustNative')
+    doLast {
+        def nativeRoot = rootProject.file('rust-core/native')
+        def destination = layout.buildDirectory.dir('generated/native').get().asFile
+        copy {
+            from nativeRoot
+            into destination
+            include '**/*'
+        }
+    }
+}
+
+tasks.named('jar') {
+    dependsOn tasks.named('bundleRustNatives')
+    from(layout.buildDirectory.dir('generated/native')) {
+        into 'META-INF/native'
+    }
+}
+
+tasks.named('test') {
+    dependsOn tasks.named('buildRustCore')
+    jvmArgs "-Djna.library.path=${rootProject.file('rust-core/target/release')}"
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {

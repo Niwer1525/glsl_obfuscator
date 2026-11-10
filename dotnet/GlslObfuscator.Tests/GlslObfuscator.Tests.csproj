@@ -5,6 +5,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="../../rust-core/native/linux-x64/libglsl_obfuscator_core.so"
+          Link="libglsl_obfuscator_core.so"
+          CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="../GlslObfuscator/GlslObfuscator.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
