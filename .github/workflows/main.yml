@@ -11,6 +11,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write # Required for NuGet Trusted Publishing (OIDC)
 
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +21,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          server-id: github # Maven authentification
+          server-id: github # Maven authentication
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
@@ -48,9 +49,10 @@ jobs:
             -p:PackageVersion="${GITHUB_REF_NAME#v}"
 
       - name: Publish NuGet package
-        run: dotnet nuget push "release-artifacts/Niwer.GlslObfuscator.${GITHUB_REF_NAME#v}.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "release-artifacts/Niwer.GlslObfuscator.${GITHUB_REF_NAME#v}.nupkg" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
 
       - name: Prepare Fixed Name JARs
         run: |
