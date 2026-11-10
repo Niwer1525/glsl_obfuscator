@@ -181,3 +181,32 @@ Map<File, String> projectResults = GlslTask.obfuscateProject(List.of(
     new File("shaders/model_calculator.glsl")
 ), true, true, 12345L);
 ```
+### C# / .NET API
+
+The .NET library is in [`dotnet/GlslObfuscator`](./dotnet/GlslObfuscator) and targets
+`netstandard2.0`, so it can be referenced by modern .NET applications and compatible
+.NET Framework projects.
+
+```bash
+dotnet add package Niwer.GlslObfuscator
+```
+
+```csharp
+using Niwer.GlslObfuscator;
+
+var obfuscated = GlslObfuscator.Obfuscate(
+    shaderSource,
+    minify: true,
+    separateFunctionsAndVariables: true,
+    seed: 12345,
+    excludedSymbols: new[] { "uResolution" });
+
+var project = GlslObfuscator.ObfuscateProject(
+    new[] { "shaders/main.glsl", "shaders/math.glsl" },
+    minify: true,
+    seed: 12345);
+```
+
+`ObfuscateFile` handles a single file, while `ObfuscateProject` uses one shared
+symbol table for all files. `// @keep symbol` and `/* @keep symbol */` directives
+are supported in the same way as the Java library.

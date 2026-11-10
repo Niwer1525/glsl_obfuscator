@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Niwer.GlslObfuscator</RootNamespace>
+    <AssemblyName>Niwer.GlslObfuscator</AssemblyName>
+    <PackageId>Niwer.GlslObfuscator</PackageId>
+    <Description>GLSL shader minifier and obfuscator.</Description>
+    <PackageReadmeFile>README.MD</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="../../README.MD" Pack="true" PackagePath="README.MD" />
+  </ItemGroup>
+</Project>
